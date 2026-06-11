@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contact and Location Info | Our Lady of Mount Carmel</title>
+    <meta name="description" content="Contact details and location for Our Lady of Mount Carmel Traditional Catholic Church.">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <!-- CSS stylesheet -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <!-- FontAwesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Top Hero Banner Image -->
+    <header class="hero-banner">
+        <img src="{{ url_for('static', filename='images/homepage_cover.jpg') }}" alt="Our Lady of Mount Carmel Church Banner" class="hero-image">
+        <div class="hero-overlay"></div>
+    </header>
+
+    <!-- Navigation & Search Bar Wrapper -->
+    <nav class="navigation-bar">
+        <div class="nav-container">
+            <!-- Search Box -->
+            <div class="search-box">
+                <i class="fa fa-search search-icon"></i>
+                <input type="text" placeholder="Search..." aria-label="Search site">
+            </div>
+
+            <!-- Hamburger menu for mobile -->
+            <button class="menu-toggle" id="mobile-menu-btn" aria-label="Toggle Navigation Menu">
+                <i class="fa fa-bars"></i>
+            </button>
+
+            <!-- Navigation Links -->
+            <div class="nav-menu" id="nav-menu">
+                <a href="{{ url_for('home') }}" class="nav-link">Home</a>
+                <a href="#donate" class="nav-link">Donate</a>
+                <a href="{{ url_for('contact') }}" class="nav-link active">Contact</a>
+                <a href="#newsletters" class="nav-link">Newsletters</a>
+                <a href="#mass-times" class="nav-link">Mass times</a>
+                <a href="#beliefs" class="nav-link">Beliefs</a>
+                <a href="#gallery" class="nav-link">Gallery</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content Area -->
+    <main class="content-container">
+        <section class="location-section">
+            <h1 class="main-title">Contact and location info:</h1>
+            
+            <div class="location-card">
+                <div class="card-header">
+                    <h3>General Directory</h3>
+                </div>
+                <div class="card-body" style="text-align: left;">
+                    <div style="margin-bottom: 1.5rem;">
+                        <p class="church-name" style="margin-bottom: 0.5rem;"><i class="fa fa-phone icon-accent"></i> Contact info:</p>
+                        <p style="font-size: 1.05rem; padding-left: 1.8rem;">
+                            <strong>Phone:</strong> Lee Speray <a href="tel:5025176550" class="external-link" style="color: var(--text-dark); border-bottom: none;">(502 - 517 - 6550)</a>
+                        </p>
+                        <p style="font-size: 1.05rem; padding-left: 1.8rem; margin-top: 0.5rem; color: var(--text-muted);">
+                            <strong>Email:</strong> ( )
+                        </p>
+                    </div>
+
+                    <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border-color);">
+                        <p class="church-name" style="margin-bottom: 0.5rem;"><i class="fa fa-map-marker-alt icon-accent"></i> Location:</p>
+                        <address style="font-style: normal; font-size: 1.05rem; padding-left: 1.8rem;">
+                            <p>110 West Poplar Street</p>
+                            <p>Harrodsburg, KY 40330</p>
+                        </address>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <p>&copy; 2026 Our Lady of Mount Carmel Traditional Catholic Church. All rights reserved.</p>
+    </footer>
+
+    <!-- Simple JS to toggle responsive mobile menu -->
+    <script>
+        const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+        const navMenu = document.getElementById('nav-menu');
+
+        mobileMenuBtn.addEventListener('click', () => {
+            navMenu.classList.toggle('active');
+            const icon = mobileMenuBtn.querySelector('i');
+            if (navMenu.classList.contains('active')) {
+                icon.className = 'fa fa-times';
+            } else {
+                icon.className = 'fa fa-bars';
+            }
+        });
+    </script>
+</body>
+</html>
