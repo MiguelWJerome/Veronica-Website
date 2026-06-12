@@ -15,6 +15,10 @@ def home():
 def contact():
     return render_template('contact.html')
 
+@app.route('/gallery')
+def gallery():
+    return render_template('gallery.html')
+
 if __name__ == '__main__':
     # Run the application on localhost and port 2048
     print("Starting Flask application on http://localhost:2048...")

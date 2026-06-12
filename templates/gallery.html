@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Photo Gallery | Our Lady of Mount Carmel</title>
+    <meta name="description" content="Photo gallery for Our Lady of Mount Carmel Traditional Catholic Church in Harrodsburg, KY.">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <!-- CSS stylesheet -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <!-- FontAwesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Top Hero Banner Image -->
+    <header class="hero-banner">
+        <img src="{{ url_for('static', filename='images/homepage_cover.jpg') }}" alt="Our Lady of Mount Carmel Church Banner" class="hero-image">
+        <div class="hero-overlay"></div>
+    </header>
+
+    <!-- Navigation & Search Bar Wrapper -->
+    <nav class="navigation-bar">
+        <div class="nav-container">
+            <!-- Search Box -->
+            <div class="search-box">
+                <i class="fa fa-search search-icon"></i>
+                <input type="text" placeholder="Search..." aria-label="Search site">
+            </div>
+
+            <!-- Hamburger menu for mobile -->
+            <button class="menu-toggle" id="mobile-menu-btn" aria-label="Toggle Navigation Menu">
+                <i class="fa fa-bars"></i>
+            </button>
+
+            <!-- Navigation Links -->
+            <div class="nav-menu" id="nav-menu">
+                <a href="{{ url_for('home') }}" class="nav-link">Home</a>
+                <a href="#donate" class="nav-link">Donate</a>
+                <a href="{{ url_for('contact') }}" class="nav-link">Contact</a>
+                <a href="#newsletters" class="nav-link">Newsletters</a>
+                <a href="#mass-times" class="nav-link">Mass times</a>
+                <a href="#beliefs" class="nav-link">Beliefs</a>
+                <a href="{{ url_for('gallery') }}" class="nav-link active">Gallery</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content Area -->
+    <main class="content-container">
+        <section class="gallery-section">
+            <h1 class="main-title" style="text-align: center;">Photo Gallery:</h1>
+            
+            <div class="gallery-grid">
+                <!-- Image 1 -->
+                <div class="gallery-card">
+                    <img src="{{ url_for('static', filename='images/outdoor_ceremony.jpg') }}" alt="Outdoor Ceremony" class="gallery-img">
+                    <div class="gallery-caption">Outdoor Ceremony</div>
+                </div>
+                <!-- Image 2 -->
+                <div class="gallery-card">
+                    <img src="{{ url_for('static', filename='images/our_lady_banner.jpg') }}" alt="Our Lady Banner" class="gallery-img">
+                    <div class="gallery-caption">Our Lady Banner</div>
+                </div>
+                <!-- Image 3 -->
+                <div class="gallery-card">
+                    <img src="{{ url_for('static', filename='images/easter_setup.jpg') }}" alt="Easter Setup" class="gallery-img">
+                    <div class="gallery-caption">Easter Setup</div>
+                </div>
+                <!-- Image 4 -->
+                <div class="gallery-card">
+                    <img src="{{ url_for('static', filename='images/main_altar.jpg') }}" alt="Main Altar" class="gallery-img">
+                    <div class="gallery-caption">Main Altar</div>
+                </div>
+                <!-- Image 5 -->
+                <div class="gallery-card">
+                    <img src="{{ url_for('static', filename='images/pews.jpg') }}" alt="Pews" class="gallery-img">
+                    <div class="gallery-caption">Pews</div>
+                </div>
+                <!-- Image 6 -->
+                <div class="gallery-card">
+                    <img src="{{ url_for('static', filename='images/front_of_church.jpg') }}" alt="Front of Church" class="gallery-img">
+                    <div class="gallery-caption">Front of Church</div>
+                </div>
+                <!-- Image 7 -->
+                <div class="gallery-card">
+                    <img src="{{ url_for('static', filename='images/our_lady_banner_wide.jpg') }}" alt="Our Lady's Banner (Wide View)" class="gallery-img">
+                    <div class="gallery-caption">Our Lady's Banner (Wide View)</div>
+                </div>
+                <!-- Image 8 -->
+                <div class="gallery-card">
+                    <img src="{{ url_for('static', filename='images/consecration.png') }}" alt="Consecration" class="gallery-img">
+                    <div class="gallery-caption">Consecration</div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <p>&copy; 2026 Our Lady of Mount Carmel Traditional Catholic Church. All rights reserved.</p>
+    </footer>
+
+    <!-- Simple JS to toggle responsive mobile menu -->
+    <script>
+        const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+        const navMenu = document.getElementById('nav-menu');
+
+        mobileMenuBtn.addEventListener('click', () => {
+            navMenu.classList.toggle('active');
+            const icon = mobileMenuBtn.querySelector('i');
+            if (navMenu.classList.contains('active')) {
+                icon.className = 'fa fa-times';
+            } else {
+                icon.className = 'fa fa-bars';
+            }
+        });
+    </script>
+</body>
+</html>
