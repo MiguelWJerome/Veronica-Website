@@ -19,6 +19,10 @@ def contact():
 def gallery():
     return render_template('gallery.html')
 
+@app.route('/beliefs')
+def beliefs():
+    return render_template('beliefs.html')
+
 if __name__ == '__main__':
     # Run the application on localhost and port 2048
     print("Starting Flask application on http://localhost:2048...")
