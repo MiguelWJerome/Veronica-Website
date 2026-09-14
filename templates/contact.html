@@ -25,10 +25,10 @@
     <nav class="navigation-bar">
         <div class="nav-container">
             <!-- Search Box -->
-            <div class="search-box">
+            <form action="{{ url_for('search') }}" method="GET" class="search-box">
                 <i class="fa fa-search search-icon"></i>
-                <input type="text" placeholder="Search..." aria-label="Search site">
-            </div>
+                <input type="text" name="q" placeholder="Search..." aria-label="Search site">
+            </form>
 
             <!-- Hamburger menu for mobile -->
             <button class="menu-toggle" id="mobile-menu-btn" aria-label="Toggle Navigation Menu">
@@ -60,17 +60,17 @@
                 <div class="card-body" style="text-align: left;">
                     <div style="margin-bottom: 1.5rem;">
                         <p class="church-name" style="margin-bottom: 0.5rem;"><i class="fa fa-phone icon-accent"></i> Contact info:</p>
-                        <p style="font-size: 1.05rem; padding-left: 1.8rem;">
+                        <p class="contact-directory-entry" style="font-size: 1.05rem; padding-left: 1.8rem; word-break: break-word;">
                             <strong>Phone:</strong> Lee Speray <a href="tel:5025451730" class="external-link" style="color: var(--text-dark); border-bottom: none;">(502-545-1730)</a>
                         </p>
-                        <p style="font-size: 1.05rem; padding-left: 1.8rem; margin-top: 0.5rem; color: var(--text-muted);">
-                            <strong>Email:</strong> ( )
+                        <p class="contact-directory-entry" style="font-size: 1.05rem; padding-left: 1.8rem; margin-top: 0.5rem; color: var(--text-dark); word-break: break-all; overflow-wrap: anywhere;">
+                            <strong>Email:</strong> <a href="mailto:OLMCHarrodsburgKy@protonmail.com" class="external-link" style="color: var(--text-dark); border-bottom: none; word-break: break-all;">OLMCHarrodsburgKy@protonmail.com</a>
                         </p>
                     </div>
 
                     <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border-color);">
                         <p class="church-name" style="margin-bottom: 0.5rem;"><i class="fa fa-map-marker-alt icon-accent"></i> Location:</p>
-                        <address style="font-style: normal; font-size: 1.05rem; padding-left: 1.8rem;">
+                        <address class="contact-directory-entry" style="font-style: normal; font-size: 1.05rem; padding-left: 1.8rem;">
                             <p>110 West Poplar Street</p>
                             <p>Harrodsburg, KY 40330</p>
                         </address>
@@ -85,20 +85,7 @@
         <p>&copy; 2026 Our Lady of Mount Carmel Traditional Catholic Church. All rights reserved.</p>
     </footer>
 
-    <!-- Simple JS to toggle responsive mobile menu -->
-    <script>
-        const mobileMenuBtn = document.getElementById('mobile-menu-btn');
-        const navMenu = document.getElementById('nav-menu');
-
-        mobileMenuBtn.addEventListener('click', () => {
-            navMenu.classList.toggle('active');
-            const icon = mobileMenuBtn.querySelector('i');
-            if (navMenu.classList.contains('active')) {
-                icon.className = 'fa fa-times';
-            } else {
-                icon.className = 'fa fa-bars';
-            }
-        });
-    </script>
+    <!-- Main JavaScript for Navigation and Modal Notification -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 </body>
 </html>

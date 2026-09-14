@@ -25,10 +25,10 @@
     <nav class="navigation-bar">
         <div class="nav-container">
             <!-- Search Box -->
-            <div class="search-box">
+            <form action="{{ url_for('search') }}" method="GET" class="search-box">
                 <i class="fa fa-search search-icon"></i>
-                <input type="text" placeholder="Search..." aria-label="Search site">
-            </div>
+                <input type="text" name="q" placeholder="Search..." aria-label="Search site">
+            </form>
 
             <!-- Hamburger menu for mobile -->
             <button class="menu-toggle" id="mobile-menu-btn" aria-label="Toggle Navigation Menu">
@@ -68,7 +68,7 @@
                 <h3>What We Believe</h3>
             </div>
             
-            <div class="card-body" style="text-align: left; padding: 2.5rem 3rem;">
+            <div class="card-body beliefs-card-body" style="text-align: left;">
                 
                 <!-- Section 1 -->
                 <div style="margin-bottom: 2rem;">
@@ -179,20 +179,7 @@
         <p>&copy; 2026 Our Lady of Mount Carmel Traditional Catholic Church. All rights reserved.</p>
     </footer>
 
-    <!-- Simple JS to toggle responsive mobile menu -->
-    <script>
-        const mobileMenuBtn = document.getElementById('mobile-menu-btn');
-        const navMenu = document.getElementById('nav-menu');
-
-        mobileMenuBtn.addEventListener('click', () => {
-            navMenu.classList.toggle('active');
-            const icon = mobileMenuBtn.querySelector('i');
-            if (navMenu.classList.contains('active')) {
-                icon.className = 'fa fa-times';
-            } else {
-                icon.className = 'fa fa-bars';
-            }
-        });
-    </script>
+    <!-- Main JavaScript for Navigation and Modal Notification -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 </body>
 </html>
