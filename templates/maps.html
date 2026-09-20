@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visitor Maps Portal | Our Lady of Mount Carmel</title>
+    <meta name="description" content="Visitor location maps portal for Our Lady of Mount Carmel Traditional Catholic Church.">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- CSS stylesheet -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <!-- FontAwesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Leaflet CSS for interactive zoomable map -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+</head>
+<body class="maps-page-body">
+
+    <!-- Top Hero Banner Image -->
+    <header class="hero-banner">
+        <img src="{{ url_for('static', filename='images/homepage_cover.jpg') }}" alt="Our Lady of Mount Carmel Church Banner" class="hero-image">
+        <div class="hero-overlay"></div>
+    </header>
+
+    <!-- Navigation & Search Bar Wrapper -->
+    <nav class="navigation-bar">
+        <div class="nav-container">
+            <!-- Search Box -->
+            <form action="{{ url_for('search') }}" method="GET" class="search-box">
+                <i class="fa fa-search search-icon"></i>
+                <input type="text" name="q" placeholder="Search..." aria-label="Search site">
+            </form>
+
+            <!-- Hamburger menu for mobile -->
+            <button class="menu-toggle" id="mobile-menu-btn" aria-label="Toggle Navigation Menu">
+                <i class="fa fa-bars"></i>
+            </button>
+
+            <!-- Navigation Links -->
+            <div class="nav-menu" id="nav-menu">
+                <a href="{{ url_for('home') }}" class="nav-link">Home</a>
+                <a href="#donate" class="nav-link">Donate</a>
+                <a href="{{ url_for('contact') }}" class="nav-link">Contact</a>
+                <a href="#newsletters" class="nav-link">Newsletters</a>
+                <a href="#mass-times" class="nav-link">Mass times</a>
+                <a href="{{ url_for('beliefs') }}" class="nav-link">Beliefs</a>
+                <a href="{{ url_for('gallery') }}" class="nav-link">Gallery</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content Area -->
+    <main class="content-container">
+        
+        <section class="info-section">
+            <h1 class="main-title">CMRI: Our Lady of Mount Carmel Traditional Catholic Church</h1>
+            <p class="cmri-info">
+                Visitor Location & Intelligence Portal
+            </p>
+        </section>
+
+        <section class="location-section">
+            <h2 class="section-title"><i class="fa fa-map-location-dot title-icon"></i> Visitor Map</h2>
+
+            <!-- 1. Password Login View (Displayed when not authenticated) -->
+            <div id="maps-login-container" class="location-card maps-auth-card" style="{% if authenticated %}display: none;{% endif %}">
+                <div class="card-header">
+                    <h3>Enter Speray Admin Password</h3>
+                </div>
+                <div class="card-body" style="padding: 2.5rem 2rem; max-width: 500px; margin: 0 auto; text-align: center;">
+                    <div class="admin-login-icon" style="margin-bottom: 1.25rem;">
+                        <i class="fa fa-shield-halved"></i>
+                    </div>
+                    <p style="color: var(--text-muted); font-size: 0.95rem; margin-bottom: 1.5rem;">
+                        Please enter the administrator password to view visitor geolocation data and maps.
+                    </p>
+
+                    <div id="login-error-alert" class="admin-login-alert" style="{% if not error %}display: none;{% endif %} margin-bottom: 1.25rem;">
+                        <i class="fa fa-triangle-exclamation"></i>
+                        <span id="login-error-text">{{ error or '' }}</span>
+                    </div>
+
+                    <form id="maps-login-form" action="{{ url_for('maps') }}" method="POST" class="admin-login-form">
+                        <div class="admin-input-group">
+                            <label for="admin-password" class="admin-label">Admin Password</label>
+                            <div class="password-input-wrapper">
+                                <i class="fa fa-lock input-icon"></i>
+                                <input type="password" id="admin-password" name="password" placeholder="Enter password..." required autofocus autocomplete="current-password" class="admin-password-input">
+                                <button type="button" class="password-toggle-btn" id="toggle-pw-btn" aria-label="Toggle password visibility">
+                                    <i class="fa fa-eye" id="toggle-pw-icon"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <button type="submit" id="login-submit-btn" class="admin-submit-btn" style="width: 100%; margin-top: 0.5rem;">
+                            <i class="fa fa-key"></i> Unlock Dashboard
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- 2. Interactive Map Dashboard View (Displayed when authenticated) -->
+            <div id="maps-dashboard-container" class="maps-dashboard-wrapper" style="{% if not authenticated %}display: none;{% endif %}">
+                
+                <!-- Admin Dashboard Sub-Header / Stats -->
+                <div class="maps-dashboard-header">
+                    <div class="maps-dashboard-title-area">
+                        <span class="maps-live-badge"><i class="fa fa-circle-dot"></i> Live Active</span>
+                        <h3 class="maps-subheading">Visitor Geolocation Dashboard</h3>
+                    </div>
+
+                    <div class="admin-topbar-stats">
+                        <div class="stat-pill">
+                            <span class="stat-label">Total Visits:</span>
+                            <span class="stat-value" id="stat-total-visits">{{ total_visits }}</span>
+                        </div>
+                        <div class="stat-pill">
+                            <span class="stat-label">Unique IPs:</span>
+                            <span class="stat-value" id="stat-unique-ips">{{ unique_ips }}</span>
+                        </div>
+                        <div class="stat-pill">
+                            <span class="stat-label">Locations:</span>
+                            <span class="stat-value" id="stat-locations">{{ unique_locations }}</span>
+                        </div>
+                        <a href="{{ url_for('maps_logout') }}" id="btn-logout" class="admin-btn-logout" title="Lock and Logout">
+                            <i class="fa fa-lock"></i> Lock
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Main Layout: Sidebar & Map -->
+                <div class="admin-main-layout" style="border-radius: 12px; border: 1px solid var(--border-color); overflow: hidden; min-height: 600px;">
+                    
+                    <!-- Left Sidebar: Visitor Sessions List -->
+                    <aside class="admin-sidebar">
+                        <div class="sidebar-header">
+                            <div class="sidebar-title-row">
+                                <h2><i class="fa fa-list-check icon-accent"></i> Visitor Sessions</h2>
+                                <span class="session-counter-badge" id="session-counter">{{ visits|length }}</span>
+                            </div>
+                            <!-- Session Search Filter -->
+                            <div class="sidebar-search-box">
+                                <i class="fa fa-search"></i>
+                                <input type="text" id="session-filter-input" placeholder="Filter by IP, City, Page..." aria-label="Filter visitor sessions">
+                            </div>
+                        </div>
+
+                        <div class="sessions-scroll-list" id="sessions-list">
+                            {% if visits and visits|length > 0 %}
+                                {% for v in visits %}
+                                    <div class="session-card {% if loop.first %}active{% endif %}" 
+                                         data-id="{{ v.id }}"
+                                         data-ip="{{ v.ip_address }}"
+                                         data-city="{{ v.city }}"
+                                         data-region="{{ v.region }}"
+                                         data-country="{{ v.country }}"
+                                         data-lat="{{ v.latitude }}"
+                                         data-lng="{{ v.longitude }}"
+                                         data-page="{{ v.page_visited }}"
+                                         data-time="{{ v.timestamp }}"
+                                         data-org="{{ v.org }}"
+                                         data-ua="{{ v.user_agent }}">
+                                        <div class="session-card-top">
+                                            <span class="session-ip"><i class="fa fa-network-wired"></i> {{ v.ip_address }}</span>
+                                            <span class="session-time">{{ v.timestamp }}</span>
+                                        </div>
+                                        <div class="session-location">
+                                            <i class="fa fa-location-dot icon-accent"></i>
+                                            <strong>{{ v.city }}{% if v.region %}, {{ v.region }}{% endif %}</strong>
+                                            <span class="session-country">({{ v.country }})</span>
+                                        </div>
+                                        <div class="session-card-bottom">
+                                            <span class="session-page-badge"><i class="fa fa-file-code"></i> {{ v.page_visited }}</span>
+                                            <span class="session-coords">{{ v.latitude|round(2) }}, {{ v.longitude|round(2) }}</span>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            {% else %}
+                                <div class="no-sessions-empty" id="no-sessions-empty">
+                                    <i class="fa fa-chart-line-down empty-icon"></i>
+                                    <p>No visitor sessions logged yet.</p>
+                                    <small>Visits to public pages will automatically appear here in real time.</small>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </aside>
+
+                    <!-- Right Main: Interactive Map & Live Session Inspector -->
+                    <main class="admin-map-area">
+                        
+                        <!-- Map View Container -->
+                        <div class="map-view-wrapper">
+                            <div class="map-toolbar">
+                                <div class="map-toolbar-left">
+                                    <span class="map-status-text"><i class="fa fa-compass icon-accent"></i> Interactive Visitor Map</span>
+                                </div>
+                                <div class="map-toolbar-right">
+                                    <button type="button" class="map-mode-btn active" id="btn-leaflet-view">
+                                        <i class="fa fa-layer-group"></i> Interactive Map
+                                    </button>
+                                    <button type="button" class="map-mode-btn" id="btn-google-view">
+                                        <i class="fa fa-map"></i> Google Maps Embed
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Leaflet Interactive Map -->
+                            <div id="interactive-map" class="map-container-layer"></div>
+
+                            <!-- Google Maps Embed Layer -->
+                            <div id="google-maps-frame-container" class="map-container-layer" style="display: none;">
+                                <iframe id="google-map-iframe" 
+                                        src="about:blank"
+                                        class="google-map-frame" 
+                                        loading="lazy" 
+                                        allowfullscreen 
+                                        referrerpolicy="no-referrer-when-downgrade">
+                                </iframe>
+                            </div>
+                        </div>
+
+                        <!-- Selected Visitor Inspector Card -->
+                        <div class="inspector-card" id="inspector-card">
+                            <div class="inspector-header">
+                                <div class="inspector-title-group">
+                                    <div class="inspector-pulse-indicator"></div>
+                                    <h3 class="inspector-heading" id="inspect-location-title">Harrodsburg, Kentucky, United States</h3>
+                                </div>
+                                <a id="inspect-gmaps-link" href="https://maps.google.com" target="_blank" rel="noopener noreferrer" class="gmaps-external-link">
+                                    <i class="fa fa-arrow-up-right-from-square"></i> Open in Google Maps
+                                </a>
+                            </div>
+
+                            <div class="inspector-grid">
+                                <div class="inspector-item">
+                                    <span class="inspector-item-label"><i class="fa fa-network-wired"></i> IP Address</span>
+                                    <span class="inspector-item-val" id="inspect-ip">127.0.0.1</span>
+                                </div>
+                                <div class="inspector-item">
+                                    <span class="inspector-item-label"><i class="fa fa-clock"></i> Timestamp</span>
+                                    <span class="inspector-item-val" id="inspect-time">Just now</span>
+                                </div>
+                                <div class="inspector-item">
+                                    <span class="inspector-item-label"><i class="fa fa-file-lines"></i> Page Visited</span>
+                                    <span class="inspector-item-val" id="inspect-page">/home</span>
+                                </div>
+                                <div class="inspector-item">
+                                    <span class="inspector-item-label"><i class="fa fa-crosshairs"></i> Latitude & Longitude</span>
+                                    <span class="inspector-item-val" id="inspect-coords">37.7640, -84.8436</span>
+                                </div>
+                                <div class="inspector-item full-width">
+                                    <span class="inspector-item-label"><i class="fa fa-building"></i> ISP / Organization</span>
+                                    <span class="inspector-item-val" id="inspect-org">Local Visitor Network</span>
+                                </div>
+                                <div class="inspector-item full-width">
+                                    <span class="inspector-item-label"><i class="fa fa-laptop-code"></i> User-Agent / Browser</span>
+                                    <span class="inspector-item-val" id="inspect-ua">Mozilla/5.0 ...</span>
+                                </div>
+                            </div>
+                        </div>
+
+                    </main>
+                </div>
+            </div>
+
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <p>&copy; 2026 Our Lady of Mount Carmel Traditional Catholic Church. All rights reserved.</p>
+    </footer>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    
+    <!-- Pass server visits data safely -->
+    <script>
+        window.SERVER_IS_AUTHENTICATED = {{ 'true' if authenticated else 'false' }};
+        window.VISITS_DATA = {{ visits_json|safe }};
+    </script>
+    <!-- Main JavaScript for Navigation and Modal Notification -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/maps.js') }}"></script>
+</body>
+</html>

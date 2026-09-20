@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Authentication | Our Lady of Mount Carmel</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <!-- CSS stylesheet -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <!-- FontAwesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="admin-login-body">
+
+    <div class="admin-login-wrapper">
+        <div class="admin-login-card">
+            <div class="admin-login-header">
+                <div class="admin-login-icon">
+                    <i class="fa fa-shield-halved"></i>
+                </div>
+                <h1 class="admin-login-title">Enter Speray Admin Password</h1>
+                <p class="admin-login-subtitle">Our Lady of Mount Carmel • Secure Visitor Maps Portal</p>
+            </div>
+
+            {% if error %}
+                <div class="admin-login-alert">
+                    <i class="fa fa-triangle-exclamation"></i>
+                    <span>{{ error }}</span>
+                </div>
+            {% endif %}
+
+            <form action="{{ url_for('maps') }}" method="POST" class="admin-login-form">
+                <div class="admin-input-group">
+                    <label for="admin-password" class="admin-label">Admin Password</label>
+                    <div class="password-input-wrapper">
+                        <i class="fa fa-lock input-icon"></i>
+                        <input type="password" id="admin-password" name="password" placeholder="Enter password..." required autofocus autocomplete="current-password" class="admin-password-input">
+                        <button type="button" class="password-toggle-btn" id="toggle-pw-btn" aria-label="Toggle password visibility">
+                            <i class="fa fa-eye" id="toggle-pw-icon"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <button type="submit" class="admin-submit-btn">
+                    <i class="fa fa-key"></i> Unlock Dashboard
+                </button>
+            </form>
+
+            <div class="admin-login-footer">
+                <a href="{{ url_for('home') }}" class="admin-return-link">
+                    <i class="fa fa-arrow-left"></i> Return to Main Website
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const toggleBtn = document.getElementById('toggle-pw-btn');
+        const pwInput = document.getElementById('admin-password');
+        const pwIcon = document.getElementById('toggle-pw-icon');
+
+        if (toggleBtn && pwInput && pwIcon) {
+            toggleBtn.addEventListener('click', () => {
+                if (pwInput.type === 'password') {
+                    pwInput.type = 'text';
+                    pwIcon.className = 'fa fa-eye-slash';
+                } else {
+                    pwInput.type = 'password';
+                    pwIcon.className = 'fa fa-eye';
+                }
+            });
+        }
+    </script>
+</body>
+</html>
