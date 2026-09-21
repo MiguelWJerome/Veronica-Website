@@ -107,8 +107,10 @@
                         <!-- Dual Range Drag Thumbs -->
                         <div class="timeline-controls-row">
                             <div class="dual-range-inputs-container">
-                                <input type="range" id="timeline-range-start" min="0" max="1000" value="0" step="1" aria-label="Timeline start filter" class="timeline-range-slider range-start">
-                                <input type="range" id="timeline-range-end" min="0" max="1000" value="1000" step="1" aria-label="Timeline end filter" class="timeline-range-slider range-end">
+                                <div id="timeline-tooltip-start" class="timeline-thumb-tooltip tooltip-start" style="display: none;"></div>
+                                <div id="timeline-tooltip-end" class="timeline-thumb-tooltip tooltip-end" style="display: none;"></div>
+                                <input type="range" id="timeline-range-start" min="0" max="7" value="0" step="1" aria-label="Timeline start filter" class="timeline-range-slider range-start">
+                                <input type="range" id="timeline-range-end" min="0" max="7" value="7" step="1" aria-label="Timeline end filter" class="timeline-range-slider range-end">
                             </div>
                         </div>
 

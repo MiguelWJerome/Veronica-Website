@@ -2,10 +2,12 @@
  * Veronica Website - Admin Visitor Maps Dashboard Controller
  * Implements wireframe specifications:
  * 1. Removes .hero-banner on /maps so the navigation bar sits directly at top.
- * 2. Interactive Timeline Dual-Slider with 5% edge padding and clickable ticks per visit.
- * 3. Visitor Portfolio / Details Card directly under timeline with [x] deselect.
- * 4. Displaying max [N] filter showing newest visits in timeline range, backed by system_variables.db.
- * 5. Bidirectional selection (tick <-> marker <-> portfolio) with Marian Blue glowing tick.
+ * 2. Day-by-Day Interactive Timeline Dual-Slider with floating date hover tooltips (e.g. September 20th, 2026).
+ * 3. Auto-refill / Zoom-in: Pulling a slider in rescales/refills the timeline so the chosen range becomes the new view bounds.
+ * 4. "Full Range" button resets zoom back to the global bounds.
+ * 5. Visitor Portfolio / Details Card directly under timeline with [x] deselect.
+ * 6. Displaying max [N] filter showing newest visits in timeline range, backed by system_variables.db.
+ * 7. Bidirectional selection (tick <-> generic map pin <-> portfolio) with Marian Blue glowing tick.
  */
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -53,6 +55,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const sliderStart = document.getElementById('timeline-range-start');
     const sliderEnd = document.getElementById('timeline-range-end');
     const resetTimelineBtn = document.getElementById('timeline-reset-btn');
+    const tooltipStart = document.getElementById('timeline-tooltip-start');
+    const tooltipEnd = document.getElementById('timeline-tooltip-end');
 
     // Portfolio Elements
     const portfolioCard = document.getElementById('portfolio-card');
@@ -76,9 +80,34 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let map = null;
     let markers = [];
-    let minEpoch = 0;
-    let maxEpoch = 0;
     let saveMaxTimeout = null;
+
+    // Timeline Date State (Day-by-Day Granularity)
+    let globalMinDate = null;
+    let globalMaxDate = null;
+    let viewMinDate = null;
+    let viewMaxDate = null;
+    let totalViewDays = 7;
+    let isZoomed = false;
+
+    // --- Helper: Format Ordinal Date (e.g., September 20th, 2026) ---
+    function formatOrdinalDate(date) {
+        if (!date || isNaN(date.getTime())) return '';
+        const months = [
+            'January', 'February', 'March', 'April', 'May', 'June',
+            'July', 'August', 'September', 'October', 'November', 'December'
+        ];
+        const month = months[date.getMonth()];
+        const day = date.getDate();
+        const year = date.getFullYear();
+
+        let suffix = 'th';
+        if (day === 1 || day === 21 || day === 31) suffix = 'st';
+        else if (day === 2 || day === 22) suffix = 'nd';
+        else if (day === 3 || day === 23) suffix = 'rd';
+
+        return `${month} ${day}${suffix}, ${year}`;
+    }
 
     // --- 2. Password Visibility Toggle ---
     if (toggleBtn && pwInput && pwIcon) {
@@ -167,41 +196,59 @@ document.addEventListener('DOMContentLoaded', () => {
     function initDashboard() {
         if (!interactiveMapEl) return;
 
-        computeTimelineBounds();
+        computeGlobalDateBounds();
         initLeafletMap();
-        renderTimelineTicks();
-        updateTimelineAndMap();
+        refillTimeline(true);
 
         // Default to deselect placeholder
         clearSelection();
     }
 
-    // Compute min and max epoch timestamps across visits
-    function computeTimelineBounds() {
-        if (!visits || visits.length === 0) {
-            const now = Date.now();
-            minEpoch = now - 7 * 24 * 3600 * 1000;
-            maxEpoch = now;
-            return;
+    // Compute global min and max date bounds with blocky day-by-day granularity
+    function computeGlobalDateBounds() {
+        const now = new Date();
+        let maxD = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+        let minD = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 6, 0, 0, 0, 0);
+
+        if (visits.length > 0) {
+            const epochs = visits.map(v => v.epoch_ms).filter(Boolean);
+            const earliest = Math.min(...epochs);
+            const latest = Math.max(...epochs);
+
+            const dEarly = new Date(earliest);
+            const dLate = new Date(latest);
+
+            const startEarly = new Date(dEarly.getFullYear(), dEarly.getMonth(), dEarly.getDate(), 0, 0, 0, 0);
+            const endLate = new Date(dLate.getFullYear(), dLate.getMonth(), dLate.getDate(), 23, 59, 59, 999);
+
+            const diffDays = Math.round((endLate.getTime() - startEarly.getTime()) / (24 * 3600 * 1000));
+            if (diffDays < 7) {
+                minD = new Date(endLate.getFullYear(), endLate.getMonth(), endLate.getDate() - 6, 0, 0, 0, 0);
+                maxD = endLate;
+            } else {
+                minD = startEarly;
+                maxD = endLate;
+            }
         }
 
-        const epochs = visits.map(v => v.epoch_ms).filter(Boolean);
-        minEpoch = Math.min(...epochs);
-        maxEpoch = Math.max(...epochs);
+        globalMinDate = minD;
+        globalMaxDate = maxD;
+        viewMinDate = new Date(globalMinDate);
+        viewMaxDate = new Date(globalMaxDate);
+        isZoomed = false;
+    }
 
-        // If min equals max (e.g., only 1 visit), pad by +/- 24 hours
-        if (minEpoch === maxEpoch) {
-            minEpoch -= 24 * 3600 * 1000;
-            maxEpoch += 24 * 3600 * 1000;
-        }
+    // Helper: calculate date for day index in current view window
+    function getDateForIndex(idx) {
+        return new Date(viewMinDate.getTime() + idx * 24 * 3600 * 1000);
     }
 
     // --- 5. Leaflet Map Initialization ---
     function initLeafletMap() {
         if (map) return;
 
-        let initialLat = 37.7640;
-        let initialLng = -84.8436;
+        let initialLat = 39.3202;
+        let initialLng = -84.5520;
 
         if (visits.length > 0 && visits[0].latitude && visits[0].longitude) {
             initialLat = Number(visits[0].latitude);
@@ -210,7 +257,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         map = L.map('interactive-map', {
             center: [initialLat, initialLng],
-            zoom: visits.length > 1 ? 4 : 11,
+            zoom: visits.length > 1 ? 5 : 11,
             zoomControl: true
         });
 
@@ -219,26 +266,55 @@ document.addEventListener('DOMContentLoaded', () => {
             maxZoom: 19
         }).addTo(map);
 
-        // Resize fix
         setTimeout(() => {
             if (map) map.invalidateSize();
         }, 300);
     }
 
-    // --- 6. Render Timeline Ticks ---
-    // The timeline ticks container has left: 5% and right: 5% (effective 90% width),
-    // giving each tick a built-in 5% time cushion on both ends.
+    // --- 6. Refill / Rescale Timeline ---
+    // Rescales the timeline track to fill 100% with the active time bounds,
+    // spreading out clustered ticks so they can be inspected clearly.
+    function refillTimeline(resetToGlobal = false) {
+        if (resetToGlobal) {
+            viewMinDate = new Date(globalMinDate);
+            viewMaxDate = new Date(globalMaxDate);
+            isZoomed = false;
+        }
+
+        const msDiff = viewMaxDate.getTime() - viewMinDate.getTime();
+        totalViewDays = Math.max(1, Math.round(msDiff / (24 * 3600 * 1000)));
+
+        if (sliderStart && sliderEnd) {
+            sliderStart.min = 0;
+            sliderStart.max = totalViewDays;
+            sliderStart.step = 1;
+            sliderStart.value = 0;
+
+            sliderEnd.min = 0;
+            sliderEnd.max = totalViewDays;
+            sliderEnd.step = 1;
+            sliderEnd.value = totalViewDays;
+        }
+
+        renderTimelineTicks();
+        updateTimelineVisualsAndMap(0, totalViewDays, false);
+    }
+
+    // --- 7. Render Timeline Ticks ---
+    // Maps visits within the active view bounds proportionally across the entire bar.
     function renderTimelineTicks() {
         if (!timelineTicksContainer) return;
         timelineTicksContainer.innerHTML = '';
 
-        if (!visits || visits.length === 0) return;
+        const viewMinMs = viewMinDate.getTime();
+        const viewMaxMs = viewMaxDate.getTime();
+        const spanMs = viewMaxMs - viewMinMs;
+        if (spanMs <= 0) return;
 
-        const timeSpan = maxEpoch - minEpoch;
-        if (timeSpan <= 0) return;
+        const inWindowVisits = visits.filter(v => v.epoch_ms >= viewMinMs && v.epoch_ms <= viewMaxMs);
 
-        visits.forEach((v) => {
-            const pct = Math.max(0, Math.min(100, ((v.epoch_ms - minEpoch) / timeSpan) * 100));
+        inWindowVisits.forEach((v) => {
+            const pct = Math.max(0, Math.min(100, ((v.epoch_ms - viewMinMs) / spanMs) * 100));
             const tick = document.createElement('div');
             tick.className = 'timeline-tick';
             tick.dataset.id = v.id;
@@ -256,7 +332,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 tick.classList.add('glowing');
             }
 
-            // Clicking any tick mark illuminates it in Marian blue glow and populates the portfolio card
             tick.addEventListener('click', (e) => {
                 e.stopPropagation();
                 selectVisit(v.id, { panMap: true });
@@ -266,71 +341,77 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- 7. Dual Range Timeline Logic & Map Filtering ---
-    function updateTimelineAndMap() {
-        if (!sliderStart || !sliderEnd) return;
-
-        let startVal = parseInt(sliderStart.value, 10);
-        let endVal = parseInt(sliderEnd.value, 10);
-
-        // Prevent handles from crossing each other
+    // --- 8. Update Visuals, Tooltips, and Map Markers ---
+    function updateTimelineVisualsAndMap(startVal, endVal, showTooltips = false) {
         if (startVal > endVal) {
             const temp = startVal;
             startVal = endVal;
             endVal = temp;
-            sliderStart.value = startVal;
-            sliderEnd.value = endVal;
         }
 
-        // Update visual highlight bar spanning between handles (track has 5% padding)
-        const pctStart = (startVal / 1000) * 90 + 5;
-        const pctEnd = (endVal / 1000) * 90 + 5;
+        const pctStart = (startVal / totalViewDays) * 90 + 5;
+        const pctEnd = (endVal / totalViewDays) * 90 + 5;
+
         if (timelineHighlight) {
             timelineHighlight.style.left = `${pctStart}%`;
             timelineHighlight.style.width = `${Math.max(0, pctEnd - pctStart)}%`;
         }
 
-        // Calculate time range
-        const windowStart = minEpoch + (maxEpoch - minEpoch) * (startVal / 1000);
-        const windowEnd = minEpoch + (maxEpoch - minEpoch) * (endVal / 1000);
+        const startDate = getDateForIndex(startVal);
+        const endDate = getDateForIndex(endVal);
 
-        // Format date/time labels
-        const formatDate = (ms) => {
-            return new Date(ms).toLocaleDateString([], {
-                month: 'short',
-                day: 'numeric',
-                year: 'numeric'
-            });
-        };
+        // Update floating pop-up date tooltips
+        if (tooltipStart && tooltipEnd) {
+            tooltipStart.style.left = `${pctStart}%`;
+            tooltipStart.textContent = formatOrdinalDate(startDate);
 
-        if (timelineRangeLabel) {
-            timelineRangeLabel.textContent = `${formatDate(windowStart)} – ${formatDate(windowEnd)}`;
+            tooltipEnd.style.left = `${pctEnd}%`;
+            tooltipEnd.textContent = formatOrdinalDate(endDate);
+
+            if (showTooltips) {
+                tooltipStart.style.display = 'block';
+                tooltipEnd.style.display = 'block';
+            }
         }
 
-        // Filter visits falling within current timeline window
-        const inWindowVisits = visits.filter(v => v.epoch_ms >= windowStart && v.epoch_ms <= windowEnd);
+        // Update timeline range header label
+        const startStr = formatOrdinalDate(startDate);
+        const endStr = formatOrdinalDate(endDate);
+        if (timelineRangeLabel) {
+            timelineRangeLabel.textContent = (startStr === endStr) ? startStr : `${startStr} – ${endStr}`;
+            if (isZoomed) {
+                timelineRangeLabel.textContent += ' (Zoomed)';
+            }
+        }
+
+        // Sub-range filtering: from start of startDate to end of endDate
+        const windowStartMs = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate(), 0, 0, 0, 0).getTime();
+        const windowEndMs = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate(), 23, 59, 59, 999).getTime();
+
+        const inRangeVisits = visits.filter(v => v.epoch_ms >= windowStartMs && v.epoch_ms <= windowEndMs);
 
         if (timelineVisitsCount) {
-            timelineVisitsCount.textContent = `${inWindowVisits.length} visits`;
+            timelineVisitsCount.textContent = `${inRangeVisits.length} visits`;
         }
 
-        // Update visual dimming of ticks outside window
-        const allTicks = timelineTicksContainer.querySelectorAll('.timeline-tick');
-        allTicks.forEach(tick => {
-            const id = parseInt(tick.dataset.id, 10);
-            const v = visits.find(item => item.id === id);
-            if (v) {
-                if (v.epoch_ms >= windowStart && v.epoch_ms <= windowEnd) {
-                    tick.style.opacity = '1';
-                } else {
-                    tick.style.opacity = '0.35';
+        // Update dimming for ticks outside the active sub-selection
+        if (timelineTicksContainer) {
+            const allTicks = timelineTicksContainer.querySelectorAll('.timeline-tick');
+            allTicks.forEach(tick => {
+                const id = parseInt(tick.dataset.id, 10);
+                const v = visits.find(item => item.id === id);
+                if (v) {
+                    if (v.epoch_ms >= windowStartMs && v.epoch_ms <= windowEndMs) {
+                        tick.style.opacity = '1';
+                    } else {
+                        tick.style.opacity = '0.25';
+                    }
                 }
-            }
-        });
+            });
+        }
 
-        // "Displaying Max [N]" logic:
-        // Sort visits in window descending by epoch_ms (newest first)
-        const sortedInWindow = [...inWindowVisits].sort((a, b) => b.epoch_ms - a.epoch_ms);
+        // Max Visits control
+        const sortedInRange = [...inRangeVisits].sort((a, b) => b.epoch_ms - a.epoch_ms);
 
         let maxN = defaultMax;
         if (mapMaxInput) {
@@ -340,17 +421,16 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        const displayedVisits = sortedInWindow.slice(0, maxN);
+        const displayedVisits = sortedInRange.slice(0, maxN);
 
         if (mapStatusBadge) {
-            mapStatusBadge.textContent = `Showing ${displayedVisits.length} of ${inWindowVisits.length}`;
+            mapStatusBadge.textContent = `Showing ${displayedVisits.length} of ${inRangeVisits.length}`;
         }
 
-        // Refresh Map Markers
         renderMapMarkers(displayedVisits);
     }
 
-    // --- 8. Render Map Markers with Custom Marian Blue Style ---
+    // --- 9. Render Map Markers with Generic Map Pin Style ---
     function renderMapMarkers(displayedVisits) {
         if (!map) return;
 
@@ -383,7 +463,6 @@ document.addEventListener('DOMContentLoaded', () => {
             `;
             marker.bindPopup(popupContent);
 
-            // Selecting a pin selects the visit and populates portfolio card
             marker.on('click', (e) => {
                 L.DomEvent.stopPropagation(e);
                 selectVisit(v.id, { panMap: false });
@@ -392,7 +471,6 @@ document.addEventListener('DOMContentLoaded', () => {
             markers.push({ id: v.id, marker: marker, data: v });
         });
 
-        // Reopen popup for selected visit if visible
         if (selectedVisitId) {
             const selectedMarkerObj = markers.find(m => m.id === selectedVisitId);
             if (selectedMarkerObj) {
@@ -401,11 +479,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- 9. Selection & Deselection Logic ---
-    // User specification:
-    // "Selecting any tick or pin opens the portfolio card and illuminates the tick in glowing Marian blue.
-    // Clicking elsewhere will not accidentally deselect it; only clicking the card's [x] close button
-    // or the timeline's 'Reset Full Range' button will deselect."
+    // --- 10. Selection & Deselection Logic ---
     function selectVisit(id, options = {}) {
         const panMap = options.panMap !== false;
         selectedVisitId = id;
@@ -434,7 +508,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        // Pan map smoothly if requested
         if (panMap && map && v.latitude && v.longitude) {
             map.flyTo([v.latitude, v.longitude], Math.max(map.getZoom(), 12), { duration: 0.6 });
         }
@@ -463,29 +536,24 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Deselect function: Only called by [x] close button or "Reset Full Range" button
     function clearSelection() {
         selectedVisitId = null;
 
-        // Remove glowing class from all ticks
         if (timelineTicksContainer) {
             const allTicks = timelineTicksContainer.querySelectorAll('.timeline-tick');
             allTicks.forEach(tick => tick.classList.remove('glowing'));
         }
 
-        // Remove selected class from map markers and close popup
         markers.forEach(m => {
             const el = m.marker.getElement();
             if (el) el.classList.remove('selected');
         });
         if (map) map.closePopup();
 
-        // Show idle placeholder in portfolio card
         if (portfolioContent) portfolioContent.style.display = 'none';
         if (portfolioPlaceholder) portfolioPlaceholder.style.display = 'block';
     }
 
-    // Portfolio [x] close button
     if (portfolioCloseBtn) {
         portfolioCloseBtn.addEventListener('click', (e) => {
             e.stopPropagation();
@@ -493,37 +561,92 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Reset Full Range button
+    // Reset Full Range button: Restores full global bounds and refills timeline
     if (resetTimelineBtn) {
         resetTimelineBtn.addEventListener('click', () => {
-            if (sliderStart) sliderStart.value = 0;
-            if (sliderEnd) sliderEnd.value = 1000;
             clearSelection();
-            updateTimelineAndMap();
+            refillTimeline(true);
         });
     }
 
-    // --- 10. Bind Timeline Range Sliders ---
+    // --- 11. Bind Timeline Range Sliders with Hover Tooltips & Auto-Zoom ---
     if (sliderStart && sliderEnd) {
-        const onSliderInput = () => {
-            updateTimelineAndMap();
+        const onSliderInput = (e) => {
+            let s = parseInt(sliderStart.value, 10);
+            let end = parseInt(sliderEnd.value, 10);
+
+            if (e.target === sliderStart && s > end) {
+                sliderEnd.value = s;
+                end = s;
+            } else if (e.target === sliderEnd && end < s) {
+                sliderStart.value = end;
+                s = end;
+            }
+
+            updateTimelineVisualsAndMap(s, end, true);
+        };
+
+        // When user finishes sliding (change event): Auto-refill / Zoom-in to selected range
+        const onSliderChange = () => {
+            if (tooltipStart) tooltipStart.style.display = 'none';
+            if (tooltipEnd) tooltipEnd.style.display = 'none';
+
+            let s = parseInt(sliderStart.value, 10);
+            let end = parseInt(sliderEnd.value, 10);
+
+            if (s > end) {
+                const temp = s;
+                s = end;
+                end = temp;
+            }
+
+            // If the user narrowed down the range, zoom in and refill
+            if (s > 0 || end < totalViewDays) {
+                const chosenStartDate = getDateForIndex(s);
+                const chosenEndDate = getDateForIndex(end);
+
+                viewMinDate = new Date(chosenStartDate.getFullYear(), chosenStartDate.getMonth(), chosenStartDate.getDate(), 0, 0, 0, 0);
+                viewMaxDate = new Date(chosenEndDate.getFullYear(), chosenEndDate.getMonth(), chosenEndDate.getDate(), 23, 59, 59, 999);
+                isZoomed = true;
+
+                refillTimeline(false);
+            }
         };
 
         sliderStart.addEventListener('input', onSliderInput);
         sliderEnd.addEventListener('input', onSliderInput);
-        sliderStart.addEventListener('change', onSliderInput);
-        sliderEnd.addEventListener('change', onSliderInput);
+        sliderStart.addEventListener('change', onSliderChange);
+        sliderEnd.addEventListener('change', onSliderChange);
+
+        // Hover listeners for tooltips
+        sliderStart.addEventListener('mouseenter', () => {
+            const s = parseInt(sliderStart.value, 10);
+            const end = parseInt(sliderEnd.value, 10);
+            updateTimelineVisualsAndMap(s, end, true);
+        });
+        sliderEnd.addEventListener('mouseenter', () => {
+            const s = parseInt(sliderStart.value, 10);
+            const end = parseInt(sliderEnd.value, 10);
+            updateTimelineVisualsAndMap(s, end, true);
+        });
+        sliderStart.addEventListener('mouseleave', () => {
+            if (tooltipStart) tooltipStart.style.display = 'none';
+        });
+        sliderEnd.addEventListener('mouseleave', () => {
+            if (tooltipEnd) tooltipEnd.style.display = 'none';
+        });
     }
 
-    // --- 11. Bind "Displaying Max [N]" Input ---
+    // --- 12. Bind "Displaying Max [N]" Input ---
     if (mapMaxInput) {
         mapMaxInput.addEventListener('input', () => {
             let val = parseInt(mapMaxInput.value, 10);
             if (!isNaN(val) && val > 0) {
                 defaultMax = val;
-                updateTimelineAndMap();
+                let s = sliderStart ? parseInt(sliderStart.value, 10) : 0;
+                let end = sliderEnd ? parseInt(sliderEnd.value, 10) : totalViewDays;
+                updateTimelineVisualsAndMap(s, end, false);
 
-                // Persist new max value to system_variables.db via debounced API call
                 clearTimeout(saveMaxTimeout);
                 saveMaxTimeout = setTimeout(() => {
                     fetch('/api/set_map_max', {
