@@ -69,7 +69,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (submitBtn) {
                 submitBtn.disabled = true;
-                submitBtn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Unlocking...';
+                submitBtn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Submitting...';
             }
             if (errorAlert) errorAlert.style.display = 'none';
 
@@ -114,7 +114,7 @@ document.addEventListener('DOMContentLoaded', () => {
             } finally {
                 if (submitBtn) {
                     submitBtn.disabled = false;
-                    submitBtn.innerHTML = '<i class="fa fa-key"></i> Unlock Dashboard';
+                    submitBtn.innerHTML = 'Submit';
                 }
             }
         });

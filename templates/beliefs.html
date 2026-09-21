@@ -1,185 +1,130 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CMRI Beliefs | Our Lady of Mount Carmel</title>
-    <meta name="description" content="Statement of beliefs and traditional Catholic positions held by Congregation of Mary Immaculate Queen (CMRI) at Our Lady of Mount Carmel.">
-    <!-- Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
-    <!-- CSS stylesheet -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
-    <!-- FontAwesome for icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-</head>
-<body>
-    <!-- Top Hero Banner Image -->
-    <header class="hero-banner">
-        <img src="{{ url_for('static', filename='images/homepage_cover.jpg') }}" alt="Our Lady of Mount Carmel Church Banner" class="hero-image">
-        <div class="hero-overlay"></div>
-    </header>
+{% extends "base.html" %}
 
-    <!-- Navigation & Search Bar Wrapper -->
-    <nav class="navigation-bar">
-        <div class="nav-container">
-            <!-- Search Box -->
-            <form action="{{ url_for('search') }}" method="GET" class="search-box">
-                <i class="fa fa-search search-icon"></i>
-                <input type="text" name="q" placeholder="Search..." aria-label="Search site">
-            </form>
+{% block title %}CMRI Beliefs | Our Lady of Mount Carmel{% endblock %}
 
-            <!-- Hamburger menu for mobile -->
-            <button class="menu-toggle" id="mobile-menu-btn" aria-label="Toggle Navigation Menu">
-                <i class="fa fa-bars"></i>
-            </button>
+{% block meta_description %}Statement of beliefs and traditional Catholic positions held by Congregation of Mary Immaculate Queen (CMRI) at Our Lady of Mount Carmel.{% endblock %}
 
-            <!-- Navigation Links -->
-            <div class="nav-menu" id="nav-menu">
-                <a href="{{ url_for('home') }}" class="nav-link">Home</a>
-                <a href="#donate" class="nav-link">Donate</a>
-                <a href="{{ url_for('contact') }}" class="nav-link">Contact</a>
-                <a href="#newsletters" class="nav-link">Newsletters</a>
-                <a href="#mass-times" class="nav-link">Mass times</a>
-                <a href="{{ url_for('beliefs') }}" class="nav-link active">Beliefs</a>
-                <a href="{{ url_for('gallery') }}" class="nav-link">Gallery</a>
-            </div>
-        </div>
-    </nav>
+{% block content %}
+<!-- Ornament Section -->
+<div style="text-align: center; font-size: 1.5rem; color: var(--accent-color); margin-top: 1rem; margin-bottom: 0.5rem; letter-spacing: 0.1em;">
+    ⋆❃ུ۪ ❀ུ۪ ࿇༺༻࿇ ❃ུ۪❀ུ۪⋆
+</div>
 
-    <!-- Main Content Area -->
-    <main class="content-container">
-        <!-- Ornament Section -->
-        <div style="text-align: center; font-size: 1.5rem; color: var(--accent-color); margin-top: 1rem; margin-bottom: 0.5rem; letter-spacing: 0.1em;">
-            ⋆❃ུ۪ ❀ུ۪ ࿇༺༻࿇ ❃ུ۪❀ུ۪⋆
-        </div>
+<section class="info-section" style="border-bottom: none; padding-bottom: 0;">
+    <h1 class="main-title">CMRI Beliefs</h1>
+    <p style="font-size: 1.15rem; max-width: 800px; margin: 0 auto 2.5rem auto; line-height: 1.8; text-align: justify; text-justify: inter-word;">
+        The Congregation of Mary Immaculate Queen (CMRI) is a traditional Catholic religious congregation dedicated to preserving and practicing the Roman Catholic faith as it has been handed down through the centuries. Our mission is to remain faithful to the teachings, worship, and traditions of the Catholic Church.
+    </p>
+</section>
 
-        <section class="info-section" style="border-bottom: none; padding-bottom: 0;">
-            <h1 class="main-title">CMRI Beliefs</h1>
-            <p style="font-size: 1.15rem; max-width: 800px; margin: 0 auto 2.5rem auto; line-height: 1.8; text-align: justify; text-justify: inter-word;">
-                The Congregation of Mary Immaculate Queen (CMRI) is a traditional Catholic religious congregation dedicated to preserving and practicing the Roman Catholic faith as it has been handed down through the centuries. Our mission is to remain faithful to the teachings, worship, and traditions of the Catholic Church.
+<!-- Beliefs Details Card -->
+<div class="location-card" style="max-width: 850px; margin: 0 auto; width: 100%;">
+    <div class="card-header">
+        <h3>What We Believe</h3>
+    </div>
+    
+    <div class="card-body beliefs-card-body" style="text-align: left;">
+        
+        <!-- Section 1 -->
+        <div style="margin-bottom: 2rem;">
+            <h4 style="font-family: var(--font-heading); color: var(--primary-color); font-size: 1.3rem; margin-bottom: 0.75rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
+                The Traditional Catholic Faith
+            </h4>
+            <p style="margin-bottom: 0.75rem;">
+                We profess all the doctrines taught by the Catholic Church throughout the ages and hold firmly to Sacred Scripture, Sacred Tradition, and the perennial teachings of the Church.
             </p>
-        </section>
-
-        <!-- Beliefs Details Card -->
-        <div class="location-card" style="max-width: 850px; margin: 0 auto; width: 100%;">
-            <div class="card-header">
-                <h3>What We Believe</h3>
-            </div>
-            
-            <div class="card-body beliefs-card-body" style="text-align: left;">
-                
-                <!-- Section 1 -->
-                <div style="margin-bottom: 2rem;">
-                    <h4 style="font-family: var(--font-heading); color: var(--primary-color); font-size: 1.3rem; margin-bottom: 0.75rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
-                        The Traditional Catholic Faith
-                    </h4>
-                    <p style="margin-bottom: 0.75rem;">
-                        We profess all the doctrines taught by the Catholic Church throughout the ages and hold firmly to Sacred Scripture, Sacred Tradition, and the perennial teachings of the Church.
-                    </p>
-                    <p style="font-weight: 500; color: #a03c3c; background-color: rgba(160, 60, 60, 0.05); padding: 0.75rem 1rem; border-left: 3px solid #a03c3c; border-radius: 4px; font-size: 0.95rem;">
-                        <i class="fa fa-exclamation-triangle" style="margin-right: 0.5rem;"></i>
-                        Please note that we do not follow Vatican II because we believe it departed from traditional Catholic teachings and practices.
-                    </p>
-                </div>
-
-                <!-- Section 2 -->
-                <div style="margin-bottom: 2rem;">
-                    <h4 style="font-family: var(--font-heading); color: var(--primary-color); font-size: 1.3rem; margin-bottom: 0.75rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
-                        The Holy Sacrifice of the Mass
-                    </h4>
-                    <p>
-                        We celebrate the traditional Latin Mass according to the Roman Missal as it existed before the liturgical reforms following the Second Vatican Council. We believe the Mass is the unbloody renewal of Christ's Sacrifice on Calvary.
-                    </p>
-                </div>
-
-                <!-- Section 3 -->
-                <div style="margin-bottom: 2rem;">
-                    <h4 style="font-family: var(--font-heading); color: var(--primary-color); font-size: 1.3rem; margin-bottom: 0.75rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
-                        The Seven Sacraments
-                    </h4>
-                    <p style="margin-bottom: 1rem;">
-                        We believe in and administer the seven sacraments instituted by Our Lord Jesus Christ:
-                    </p>
-                    <ul style="list-style: none; padding-left: 0.5rem; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0.75rem;">
-                        <li style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.95rem;"><i class="fa fa-circle" style="font-size: 0.5rem; color: var(--accent-color);"></i> Baptism</li>
-                        <li style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.95rem;"><i class="fa fa-circle" style="font-size: 0.5rem; color: var(--accent-color);"></i> Confirmation</li>
-                        <li style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.95rem;"><i class="fa fa-circle" style="font-size: 0.5rem; color: var(--accent-color);"></i> Holy Communion</li>
-                        <li style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.95rem;"><i class="fa fa-circle" style="font-size: 0.5rem; color: var(--accent-color);"></i> Confession</li>
-                        <li style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.95rem;"><i class="fa fa-circle" style="font-size: 0.5rem; color: var(--accent-color);"></i> Extreme Unction (Anointing)</li>
-                        <li style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.95rem;"><i class="fa fa-circle" style="font-size: 0.5rem; color: var(--accent-color);"></i> Holy Orders</li>
-                        <li style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.95rem;"><i class="fa fa-circle" style="font-size: 0.5rem; color: var(--accent-color);"></i> Matrimony</li>
-                    </ul>
-                </div>
-
-                <!-- Section 4 -->
-                <div style="margin-bottom: 2rem;">
-                    <h4 style="font-family: var(--font-heading); color: var(--primary-color); font-size: 1.3rem; margin-bottom: 0.75rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
-                        Devotion to the Blessed Virgin Mary
-                    </h4>
-                    <p>
-                        As children of Mary Immaculate, we foster a deep devotion to the Blessed Virgin Mary, honoring her as the Mother of God and Queen of Heaven. We encourage the daily recitation of the Holy Rosary and devotion to her Immaculate Heart.
-                    </p>
-                </div>
-
-                <!-- Section 5 -->
-                <div style="margin-bottom: 2rem;">
-                    <h4 style="font-family: var(--font-heading); color: var(--primary-color); font-size: 1.3rem; margin-bottom: 0.75rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
-                        The Communion of Saints
-                    </h4>
-                    <p>
-                        We honor the saints as heroic examples of Christian virtue and seek their intercession before God. We also pray for the souls in Purgatory.
-                    </p>
-                </div>
-
-                <!-- Section 6 -->
-                <div style="margin-bottom: 2rem;">
-                    <h4 style="font-family: var(--font-heading); color: var(--primary-color); font-size: 1.3rem; margin-bottom: 0.75rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
-                        The Sede Vacante Position
-                    </h4>
-                    <p>
-                        CMRI holds the position that the Holy See is presently vacant (sede vacante). While recognizing the divine institution of the papacy and its essential role in the Church, we believe that the crisis in the Church following the reforms of the 1960s has resulted in a vacancy of the Apostolic See. This position is held in an effort to preserve the integrity of the Catholic Faith as it has always been taught.
-                    </p>
-                </div>
-
-                <!-- Section 7 -->
-                <div style="margin-bottom: 1.5rem;">
-                    <h4 style="font-family: var(--font-heading); color: var(--primary-color); font-size: 1.3rem; margin-bottom: 0.75rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
-                        Our Mission
-                    </h4>
-                    <p>
-                        Our mission is to know, love, and serve God; to preserve the traditional Catholic Faith; to sanctify souls through the sacraments; and to promote devotion to Our Lord Jesus Christ and His Blessed Mother, Mary Immaculate Queen.
-                    </p>
-                </div>
-
-                <!-- Quote Section -->
-                <div style="text-align: center; margin: 2rem 0; padding: 1.5rem; background-color: var(--bg-light); border-radius: 8px; border: 1px dashed var(--border-color);">
-                    <p style="font-family: var(--font-heading); font-size: 1.2rem; font-style: italic; color: var(--primary-color); font-weight: 600; line-height: 1.4;">
-                        "Our Lady of Mount Carmel, Star of the Sea, guide us safely to Christ."
-                    </p>
-                </div>
-
-                <!-- Closing Message -->
-                <div style="line-height: 1.7; color: var(--text-dark); font-size: 0.98rem; padding-top: 1rem;">
-                    <p style="margin-bottom: 1rem;">
-                        We hope that you will find the answers to most of your questions on our website, and at the same time, enjoy your tour of our mission.
-                    </p>
-                    <p>
-                        If you have any other questions please check our <a href="{{ url_for('contact') }}" class="external-link" style="color: var(--accent-color); font-weight: 500;">contact info</a>. May God bless you.
-                    </p>
-                </div>
-
-            </div>
+            <p style="font-weight: 500; color: #a03c3c; background-color: rgba(160, 60, 60, 0.05); padding: 0.75rem 1rem; border-left: 3px solid #a03c3c; border-radius: 4px; font-size: 0.95rem;">
+                <i class="fa fa-exclamation-triangle" style="margin-right: 0.5rem;"></i>
+                Please note that we do not follow Vatican II because we believe it departed from traditional Catholic teachings and practices.
+            </p>
         </div>
-    </main>
 
-    <!-- Footer -->
-    <footer class="footer">
-        <p>&copy; 2026 Our Lady of Mount Carmel Traditional Catholic Church. All rights reserved.</p>
-    </footer>
+        <!-- Section 2 -->
+        <div style="margin-bottom: 2rem;">
+            <h4 style="font-family: var(--font-heading); color: var(--primary-color); font-size: 1.3rem; margin-bottom: 0.75rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
+                The Holy Sacrifice of the Mass
+            </h4>
+            <p>
+                We celebrate the traditional Latin Mass according to the Roman Missal as it existed before the liturgical reforms following the Second Vatican Council. We believe the Mass is the unbloody renewal of Christ's Sacrifice on Calvary.
+            </p>
+        </div>
 
-    <!-- Main JavaScript for Navigation and Modal Notification -->
-    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
-</body>
-</html>
+        <!-- Section 3 -->
+        <div style="margin-bottom: 2rem;">
+            <h4 style="font-family: var(--font-heading); color: var(--primary-color); font-size: 1.3rem; margin-bottom: 0.75rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
+                The Seven Sacraments
+            </h4>
+            <p style="margin-bottom: 1rem;">
+                We believe in and administer the seven sacraments instituted by Our Lord Jesus Christ:
+            </p>
+            <ul style="list-style: none; padding-left: 0.5rem; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0.75rem;">
+                <li style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.95rem;"><i class="fa fa-circle" style="font-size: 0.5rem; color: var(--accent-color);"></i> Baptism</li>
+                <li style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.95rem;"><i class="fa fa-circle" style="font-size: 0.5rem; color: var(--accent-color);"></i> Confirmation</li>
+                <li style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.95rem;"><i class="fa fa-circle" style="font-size: 0.5rem; color: var(--accent-color);"></i> Holy Communion</li>
+                <li style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.95rem;"><i class="fa fa-circle" style="font-size: 0.5rem; color: var(--accent-color);"></i> Confession</li>
+                <li style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.95rem;"><i class="fa fa-circle" style="font-size: 0.5rem; color: var(--accent-color);"></i> Extreme Unction (Anointing)</li>
+                <li style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.95rem;"><i class="fa fa-circle" style="font-size: 0.5rem; color: var(--accent-color);"></i> Holy Orders</li>
+                <li style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.95rem;"><i class="fa fa-circle" style="font-size: 0.5rem; color: var(--accent-color);"></i> Matrimony</li>
+            </ul>
+        </div>
+
+        <!-- Section 4 -->
+        <div style="margin-bottom: 2rem;">
+            <h4 style="font-family: var(--font-heading); color: var(--primary-color); font-size: 1.3rem; margin-bottom: 0.75rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
+                Devotion to the Blessed Virgin Mary
+            </h4>
+            <p>
+                As children of Mary Immaculate, we foster a deep devotion to the Blessed Virgin Mary, honoring her as the Mother of God and Queen of Heaven. We encourage the daily recitation of the Holy Rosary and devotion to her Immaculate Heart.
+            </p>
+        </div>
+
+        <!-- Section 5 -->
+        <div style="margin-bottom: 2rem;">
+            <h4 style="font-family: var(--font-heading); color: var(--primary-color); font-size: 1.3rem; margin-bottom: 0.75rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
+                The Communion of Saints
+            </h4>
+            <p>
+                We honor the saints as heroic examples of Christian virtue and seek their intercession before God. We also pray for the souls in Purgatory.
+            </p>
+        </div>
+
+        <!-- Section 6 -->
+        <div style="margin-bottom: 2rem;">
+            <h4 style="font-family: var(--font-heading); color: var(--primary-color); font-size: 1.3rem; margin-bottom: 0.75rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
+                The Sede Vacante Position
+            </h4>
+            <p>
+                CMRI holds the position that the Holy See is presently vacant (sede vacante). While recognizing the divine institution of the papacy and its essential role in the Church, we believe that the crisis in the Church following the reforms of the 1960s has resulted in a vacancy of the Apostolic See. This position is held in an effort to preserve the integrity of the Catholic Faith as it has always been taught.
+            </p>
+        </div>
+
+        <!-- Section 7 -->
+        <div style="margin-bottom: 1.5rem;">
+            <h4 style="font-family: var(--font-heading); color: var(--primary-color); font-size: 1.3rem; margin-bottom: 0.75rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
+                Our Mission
+            </h4>
+            <p>
+                Our mission is to know, love, and serve God; to preserve the traditional Catholic Faith; to sanctify souls through the sacraments; and to promote devotion to Our Lord Jesus Christ and His Blessed Mother, Mary Immaculate Queen.
+            </p>
+        </div>
+
+        <!-- Quote Section -->
+        <div style="text-align: center; margin: 2rem 0; padding: 1.5rem; background-color: var(--bg-light); border-radius: 8px; border: 1px dashed var(--border-color);">
+            <p style="font-family: var(--font-heading); font-size: 1.2rem; font-style: italic; color: var(--primary-color); font-weight: 600; line-height: 1.4;">
+                "Our Lady of Mount Carmel, Star of the Sea, guide us safely to Christ."
+            </p>
+        </div>
+
+        <!-- Closing Message -->
+        <div style="line-height: 1.7; color: var(--text-dark); font-size: 0.98rem; padding-top: 1rem;">
+            <p style="margin-bottom: 1rem;">
+                We hope that you will find the answers to most of your questions on our website, and at the same time, enjoy your tour of our mission.
+            </p>
+            <p>
+                If you have any other questions please check our <a href="{{ url_for('contact') }}" class="external-link" style="color: var(--accent-color); font-weight: 500;">contact info</a>. May God bless you.
+            </p>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

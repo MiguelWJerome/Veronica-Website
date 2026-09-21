@@ -1,15 +1,50 @@
-/* Design System & Core Variables */
+/* ==========================================================================
+   DESIGN SYSTEM & CENTRALIZED THEME TOKENS
+   Colors derived directly from the Our Lady of Mount Carmel banner artwork:
+   - Rich Carmelite Walnut & Espresso Brown (Habit & Wood tones)
+   - Luminous Antique Liturgical Gold (Crowns, Halos, Scapular embroidery)
+   - Soft Marian Slate Blue (Celestial background cloudscape)
+   - Warm Antique Ivory & Parchment (Holy card paper & Mantle)
+   ========================================================================== */
 :root {
-    --primary-color: #1a2e40;       /* Deep Navy */
-    --primary-light: #2c4a63;       /* Slate Blue */
-    --accent-color: #c9a054;        /* Liturgical Gold */
-    --accent-hover: #b0873a;        /* Darker Gold */
-    --bg-light: #f7f9fa;            /* Light Warm Background */
-    --bg-white: #ffffff;
-    --text-dark: #2d3748;           /* Dark Charcoal */
-    --text-muted: #718096;          /* Muted Gray */
-    --border-color: #e2e8f0;
-    --card-shadow: 0 10px 30px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0, 0, 0, 0.02);
+    /* 1. Primary Colors - Carmelite Walnut & Espresso */
+    --primary-color: #3b2416;         /* Rich Carmelite Dark Walnut Brown */
+    --primary-light: #563722;         /* Warm Chestnut Brown */
+    --primary-dark: #24160c;          /* Deep Espresso */
+    --primary-subtle: rgba(59, 36, 22, 0.08);
+
+    /* 2. Liturgical Gold Accents - Crowns, Halos & Scapulars */
+    --accent-color: #c89538;          /* Antique Liturgical Gold */
+    --accent-hover: #af7f26;          /* Deep Burnished Gold */
+    --accent-light: #e5b758;          /* Luminous Halo Gold */
+    --accent-subtle: rgba(200, 149, 56, 0.15);
+    --gold-glow: 0 0 16px rgba(200, 149, 56, 0.45);
+
+    /* 3. Marian Celestial Sky Accents */
+    --secondary-color: #4b687f;       /* Marian Slate Blue */
+    --secondary-light: #6e8fa8;       /* Heavenly Cloud Blue */
+    --secondary-dark: #2d4254;        /* Deep Slate Blue */
+
+    /* 4. Backgrounds & Surfaces */
+    --bg-light: #faf6f0;              /* Warm Antique Linen / Parchment */
+    --bg-cream: #f3ece0;              /* Warm Ivory */
+    --bg-white: #ffffff;              /* Pure White */
+    --bg-dark-panel: #271910;         /* Deep Carmelite Panel */
+    --bg-dark-card: #362317;          /* Rich Walnut Card */
+    --bg-dark-border: #4d3322;        /* Dark Panel Border */
+
+    /* 5. Typography & Font Colors */
+    --text-dark: #2b1d14;             /* Antique Typeface Espresso */
+    --text-heading: #3b2416;          /* Deep Walnut Heading */
+    --text-muted: #6f5c4e;            /* Warm Sepia Muted */
+    --text-light: #fefcf9;            /* Antique White */
+    --text-gold: #c89538;             /* Liturgical Gold Heading/Accent Text */
+
+    /* 6. Structural & Component Tokens */
+    --border-color: #e5d9cc;          /* Soft Antique Border */
+    --border-dark: #ccbeae;           /* Medium Parchment Border */
+    --card-shadow: 0 10px 30px rgba(59, 36, 22, 0.07), 0 2px 6px rgba(59, 36, 22, 0.03);
+    --card-shadow-hover: 0 15px 35px rgba(59, 36, 22, 0.12);
     --font-heading: 'Cinzel', serif;
     --font-body: 'Montserrat', sans-serif;
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -34,16 +69,16 @@ body {
 .hero-banner {
     position: relative;
     width: 100%;
-    height: 380px;
+    height: 400px;
     overflow: hidden;
-    background-color: #000;
+    background-color: var(--primary-dark);
 }
 
 .hero-image {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    object-position: center;
+    object-position: center top;
     transition: var(--transition-smooth);
 }
 
@@ -53,14 +88,14 @@ body {
     left: 0;
     right: 0;
     bottom: 0;
-    background: linear-gradient(180deg, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.4) 100%);
+    background: linear-gradient(180deg, rgba(36, 22, 12, 0.15) 0%, rgba(36, 22, 12, 0.45) 100%);
     pointer-events: none;
 }
 
 /* Navigation Bar */
 .navigation-bar {
     background-color: var(--primary-color);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 20px rgba(36, 22, 12, 0.18);
     position: sticky;
     top: 0;
     z-index: 100;
@@ -93,7 +128,7 @@ body {
 .search-box:focus-within {
     background-color: var(--bg-white);
     border-color: var(--accent-color);
-    box-shadow: 0 0 0 3px rgba(201, 160, 84, 0.2);
+    box-shadow: 0 0 0 3px var(--accent-subtle);
 }
 
 .search-box:focus-within input {
@@ -346,13 +381,13 @@ body {
 
 /* Footer */
 .footer {
-    background-color: var(--primary-color);
-    color: rgba(255, 255, 255, 0.5);
+    background-color: var(--primary-dark);
+    color: rgba(254, 252, 249, 0.65);
     text-align: center;
-    padding: 2rem;
-    font-size: 0.85rem;
+    padding: 2.25rem 2rem;
+    font-size: 0.9rem;
     margin-top: auto;
-    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    border-top: 1px solid var(--accent-subtle);
 }
 
 /* Gallery Styles */
@@ -934,7 +969,7 @@ body {
     outline: none;
     border-color: var(--accent-color);
     background-color: #ffffff;
-    box-shadow: 0 0 0 3px rgba(201, 160, 84, 0.2);
+    box-shadow: 0 0 0 3px var(--accent-subtle);
 }
 
 .search-inline-btn {
@@ -980,7 +1015,7 @@ body {
 
 .search-result-card:hover {
     transform: translateY(-4px);
-    box-shadow: 0 12px 30px rgba(201, 160, 84, 0.18), 0 4px 12px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 12px 30px rgba(59, 36, 22, 0.12), 0 4px 12px rgba(200, 149, 56, 0.15);
     border-color: var(--accent-color);
     background-color: #ffffff;
 }
@@ -1016,7 +1051,7 @@ body {
     font-size: 0.95rem;
     font-weight: 600;
     color: var(--primary-color);
-    background-color: rgba(201, 160, 84, 0.18);
+    background-color: var(--accent-subtle);
     border: 1px solid var(--accent-color);
     padding: 0.35rem 0.85rem;
     border-radius: 8px;
@@ -1075,16 +1110,16 @@ body {
 
 /* Keyword Highlights */
 .search-highlight {
-    background-color: #fef08a; /* Warm yellow/liturgical gold highlight */
-    color: #1a2e40;
+    background-color: rgba(200, 149, 56, 0.3);
+    color: var(--primary-dark);
     font-weight: 700;
     padding: 2px 4px;
     border-radius: 3px;
 }
 
 .page-search-highlight {
-    background-color: #fef08a;
-    color: #1a2e40;
+    background-color: rgba(200, 149, 56, 0.3);
+    color: var(--primary-dark);
     font-weight: 700;
     padding: 2px 5px;
     border-radius: 4px;
@@ -1092,17 +1127,17 @@ body {
 }
 
 .page-search-highlight.glowing {
-    box-shadow: 0 0 0 3px rgba(201, 160, 84, 0.6);
+    box-shadow: 0 0 0 3px rgba(200, 149, 56, 0.6);
     animation: searchHighlightPulse 1.8s ease-in-out infinite alternate;
 }
 
 @keyframes searchHighlightPulse {
     0% {
-        box-shadow: 0 0 0 2px rgba(201, 160, 84, 0.4);
+        box-shadow: 0 0 0 2px rgba(200, 149, 56, 0.4);
     }
     100% {
-        box-shadow: 0 0 0 6px rgba(201, 160, 84, 0.85);
-        background-color: #fde047;
+        box-shadow: 0 0 0 6px rgba(200, 149, 56, 0.85);
+        background-color: var(--accent-light);
     }
 }
 
@@ -1115,9 +1150,9 @@ body {
     min-height: 100vh;
     margin: 0;
     padding: 0;
-    background: radial-gradient(circle at 50% 30%, #1e293b 0%, #0f172a 100%);
+    background: radial-gradient(circle at 50% 30%, var(--primary-light) 0%, var(--primary-dark) 100%);
     font-family: var(--font-body, 'Montserrat', sans-serif);
-    color: #f8fafc;
+    color: var(--text-light);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1131,13 +1166,13 @@ body {
 }
 
 .admin-login-card {
-    background: rgba(30, 41, 59, 0.85);
+    background: rgba(39, 25, 16, 0.88);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(201, 160, 84, 0.35);
+    border: 1px solid var(--accent-color);
     border-radius: 16px;
     padding: 2.5rem 2rem;
-    box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.6), 0 0 25px rgba(201, 160, 84, 0.15);
+    box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.6), var(--gold-glow);
     text-align: center;
 }
 
@@ -1149,29 +1184,29 @@ body {
     width: 64px;
     height: 64px;
     margin: 0 auto 1.25rem;
-    background: linear-gradient(135deg, rgba(201, 160, 84, 0.2) 0%, rgba(201, 160, 84, 0.05) 100%);
-    border: 2px solid var(--accent-gold, #c9a054);
+    background: linear-gradient(135deg, var(--accent-subtle) 0%, rgba(200, 149, 56, 0.05) 100%);
+    border: 2px solid var(--accent-color);
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: var(--accent-gold, #c9a054);
+    color: var(--accent-color);
     font-size: 1.75rem;
-    box-shadow: 0 0 15px rgba(201, 160, 84, 0.25);
+    box-shadow: var(--gold-glow);
 }
 
 .admin-login-title {
     font-family: var(--font-heading, 'Cinzel', serif);
     font-size: 1.6rem;
     font-weight: 700;
-    color: #f8fafc;
+    color: var(--text-light);
     margin: 0 0 0.5rem;
     letter-spacing: 0.5px;
 }
 
 .admin-login-subtitle {
     font-size: 0.85rem;
-    color: #94a3b8;
+    color: var(--border-dark);
     margin: 0;
 }
 
@@ -1203,7 +1238,7 @@ body {
     display: block;
     font-size: 0.85rem;
     font-weight: 600;
-    color: #cbd5e1;
+    color: var(--border-color);
     margin-bottom: 0.5rem;
     text-transform: uppercase;
     letter-spacing: 0.5px;
@@ -1218,7 +1253,7 @@ body {
 .password-input-wrapper .input-icon {
     position: absolute;
     left: 1rem;
-    color: #64748b;
+    color: var(--border-dark);
     font-size: 1rem;
     pointer-events: none;
 }
@@ -1226,10 +1261,10 @@ body {
 .admin-password-input {
     width: 100%;
     padding: 0.9rem 2.8rem 0.9rem 2.75rem;
-    background: #0f172a;
-    border: 1px solid #334155;
+    background: var(--primary-dark);
+    border: 1px solid var(--primary-light);
     border-radius: 8px;
-    color: #f8fafc;
+    color: var(--text-light);
     font-size: 1rem;
     font-family: inherit;
     transition: all 0.2s ease;
@@ -1238,9 +1273,9 @@ body {
 
 .admin-password-input:focus {
     outline: none;
-    border-color: var(--accent-gold, #c9a054);
-    box-shadow: 0 0 0 3px rgba(201, 160, 84, 0.25);
-    background: #090e1a;
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 3px var(--accent-subtle);
+    background: var(--bg-dark-panel);
 }
 
 .password-toggle-btn {
@@ -1248,7 +1283,7 @@ body {
     right: 0.75rem;
     background: transparent;
     border: none;
-    color: #94a3b8;
+    color: var(--border-dark);
     padding: 0.5rem;
     cursor: pointer;
     font-size: 1rem;
@@ -1259,12 +1294,12 @@ body {
 }
 
 .password-toggle-btn:hover {
-    color: #f8fafc;
+    color: var(--accent-light);
 }
 
 .admin-submit-btn {
-    background: linear-gradient(135deg, #c9a054 0%, #b38938 100%);
-    color: #0f172a;
+    background: linear-gradient(135deg, var(--accent-color) 0%, var(--accent-hover) 100%);
+    color: var(--primary-dark);
     border: none;
     padding: 0.95rem 1.5rem;
     border-radius: 8px;
@@ -1277,23 +1312,23 @@ body {
     justify-content: center;
     gap: 0.5rem;
     transition: all 0.25s ease;
-    box-shadow: 0 4px 12px rgba(201, 160, 84, 0.3);
+    box-shadow: 0 4px 12px rgba(200, 149, 56, 0.3);
 }
 
 .admin-submit-btn:hover {
-    background: linear-gradient(135deg, #d4af37 0%, #c9a054 100%);
+    background: linear-gradient(135deg, var(--accent-light) 0%, var(--accent-color) 100%);
     transform: translateY(-1px);
-    box-shadow: 0 6px 16px rgba(201, 160, 84, 0.45);
+    box-shadow: 0 6px 16px rgba(200, 149, 56, 0.45);
 }
 
 .admin-login-footer {
     margin-top: 2rem;
-    border-top: 1px solid #334155;
+    border-top: 1px solid var(--primary-light);
     padding-top: 1.25rem;
 }
 
 .admin-return-link {
-    color: #94a3b8;
+    color: var(--border-dark);
     text-decoration: none;
     font-size: 0.85rem;
     display: inline-flex;
@@ -1303,7 +1338,7 @@ body {
 }
 
 .admin-return-link:hover {
-    color: var(--accent-gold, #c9a054);
+    color: var(--accent-color);
 }
 
 /* ==========================================================================
@@ -1314,17 +1349,17 @@ body {
     min-height: 100vh;
     margin: 0;
     padding: 0;
-    background: #090e17;
-    font-family: var(--font-body, 'Montserrat', sans-serif);
-    color: #f8fafc;
+    background: var(--bg-dark-panel);
+    font-family: var(--font-body);
+    color: var(--text-light);
     display: flex;
     flex-direction: column;
 }
 
 /* Top Navigation Bar */
 .admin-topbar {
-    background: #0f172a;
-    border-bottom: 1px solid rgba(201, 160, 84, 0.25);
+    background: var(--primary-dark);
+    border-bottom: 1px solid var(--bg-dark-border);
     padding: 0.75rem 1.5rem;
     display: flex;
     align-items: center;
@@ -1344,28 +1379,28 @@ body {
 .admin-brand-icon {
     width: 42px;
     height: 42px;
-    background: linear-gradient(135deg, rgba(201, 160, 84, 0.2) 0%, rgba(201, 160, 84, 0.05) 100%);
-    border: 1px solid var(--accent-gold, #c9a054);
+    background: linear-gradient(135deg, var(--accent-subtle) 0%, rgba(200, 149, 56, 0.05) 100%);
+    border: 1px solid var(--accent-color);
     border-radius: 10px;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: var(--accent-gold, #c9a054);
+    color: var(--accent-color);
     font-size: 1.25rem;
 }
 
 .admin-brand-title {
-    font-family: var(--font-heading, 'Cinzel', serif);
+    font-family: var(--font-heading);
     font-size: 1.15rem;
     font-weight: 700;
-    color: #f8fafc;
+    color: var(--text-light);
     margin: 0;
     line-height: 1.2;
 }
 
 .admin-brand-subtitle {
     font-size: 0.75rem;
-    color: #94a3b8;
+    color: var(--border-dark);
     display: block;
 }
 
@@ -1376,8 +1411,8 @@ body {
 }
 
 .stat-pill {
-    background: #1e293b;
-    border: 1px solid #334155;
+    background: var(--bg-dark-card);
+    border: 1px solid var(--bg-dark-border);
     padding: 0.35rem 0.85rem;
     border-radius: 999px;
     display: flex;
@@ -1387,11 +1422,11 @@ body {
 }
 
 .stat-label {
-    color: #94a3b8;
+    color: var(--border-dark);
 }
 
 .stat-value {
-    color: var(--accent-gold, #c9a054);
+    color: var(--accent-color);
     font-weight: 700;
 }
 
@@ -1411,28 +1446,28 @@ body {
     display: inline-flex;
     align-items: center;
     gap: 0.4rem;
-    transition: all 0.2s ease;
+    transition: var(--transition-smooth);
 }
 
 .admin-btn-secondary {
-    background: #1e293b;
-    color: #cbd5e1;
-    border: 1px solid #334155;
+    background: var(--bg-dark-card);
+    color: var(--text-light);
+    border: 1px solid var(--bg-dark-border);
 }
 
 .admin-btn-secondary:hover {
-    background: #334155;
+    background: var(--primary-light);
     color: #ffffff;
 }
 
 .admin-btn-logout {
-    background: rgba(239, 68, 68, 0.15);
+    background: rgba(160, 60, 60, 0.2);
     color: #fca5a5;
-    border: 1px solid rgba(239, 68, 68, 0.3);
+    border: 1px solid rgba(160, 60, 60, 0.4);
 }
 
 .admin-btn-logout:hover {
-    background: rgba(239, 68, 68, 0.25);
+    background: rgba(160, 60, 60, 0.35);
     color: #fecaca;
 }
 
@@ -1448,8 +1483,8 @@ body {
 .admin-sidebar {
     width: 380px;
     min-width: 340px;
-    background: #0f172a;
-    border-right: 1px solid #1e293b;
+    background: var(--bg-dark-panel);
+    border-right: 1px solid var(--bg-dark-border);
     display: flex;
     flex-direction: column;
     box-sizing: border-box;
@@ -1457,8 +1492,8 @@ body {
 
 .sidebar-header {
     padding: 1.2rem 1.25rem 0.85rem;
-    border-bottom: 1px solid #1e293b;
-    background: #0f172a;
+    border-bottom: 1px solid var(--bg-dark-border);
+    background: var(--bg-dark-panel);
 }
 
 .sidebar-title-row {
@@ -1473,7 +1508,7 @@ body {
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    color: #cbd5e1;
+    color: var(--text-light);
     margin: 0;
     display: flex;
     align-items: center;
@@ -1481,9 +1516,9 @@ body {
 }
 
 .session-counter-badge {
-    background: rgba(201, 160, 84, 0.15);
-    color: var(--accent-gold, #c9a054);
-    border: 1px solid rgba(201, 160, 84, 0.3);
+    background: var(--accent-subtle);
+    color: var(--accent-color);
+    border: 1px solid rgba(200, 149, 56, 0.35);
     padding: 0.15rem 0.6rem;
     border-radius: 999px;
     font-size: 0.75rem;
@@ -1499,27 +1534,27 @@ body {
 .sidebar-search-box i {
     position: absolute;
     left: 0.85rem;
-    color: #64748b;
+    color: var(--border-dark);
     font-size: 0.85rem;
 }
 
 .sidebar-search-box input {
     width: 100%;
     padding: 0.6rem 0.75rem 0.6rem 2.2rem;
-    background: #1e293b;
-    border: 1px solid #334155;
+    background: var(--bg-dark-card);
+    border: 1px solid var(--bg-dark-border);
     border-radius: 6px;
-    color: #f8fafc;
+    color: var(--text-light);
     font-size: 0.85rem;
     font-family: inherit;
     box-sizing: border-box;
-    transition: all 0.2s ease;
+    transition: var(--transition-smooth);
 }
 
 .sidebar-search-box input:focus {
     outline: none;
-    border-color: var(--accent-gold, #c9a054);
-    background: #162032;
+    border-color: var(--accent-color);
+    background: var(--bg-dark-panel);
 }
 
 .sessions-scroll-list {
@@ -1532,27 +1567,27 @@ body {
 }
 
 .session-card {
-    background: #1e293b;
-    border: 1px solid #334155;
-    border-left: 3px solid #64748b;
+    background: var(--bg-dark-card);
+    border: 1px solid var(--bg-dark-border);
+    border-left: 3px solid var(--border-dark);
     border-radius: 8px;
     padding: 0.85rem;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: var(--transition-smooth);
 }
 
 .session-card:hover {
-    background: #273549;
-    border-color: #475569;
-    border-left-color: var(--accent-gold, #c9a054);
+    background: var(--primary-light);
+    border-color: var(--accent-color);
+    border-left-color: var(--accent-color);
     transform: translateX(2px);
 }
 
 .session-card.active {
-    background: rgba(30, 41, 59, 0.95);
-    border-color: rgba(201, 160, 84, 0.4);
-    border-left: 4px solid var(--accent-gold, #c9a054);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35), 0 0 10px rgba(201, 160, 84, 0.15);
+    background: rgba(86, 55, 34, 0.95);
+    border-color: var(--accent-color);
+    border-left: 4px solid var(--accent-color);
+    box-shadow: 0 4px 12px rgba(36, 22, 12, 0.4), var(--gold-glow);
 }
 
 .session-card-top {
@@ -1564,7 +1599,7 @@ body {
 }
 
 .session-ip {
-    color: #93c5fd;
+    color: var(--secondary-light);
     font-family: monospace;
     font-weight: 600;
     display: flex;
@@ -1573,13 +1608,13 @@ body {
 }
 
 .session-time {
-    color: #94a3b8;
+    color: var(--border-dark);
     font-size: 0.75rem;
 }
 
 .session-location {
     font-size: 0.9rem;
-    color: #f8fafc;
+    color: var(--text-light);
     margin-bottom: 0.5rem;
     display: flex;
     align-items: baseline;
@@ -1587,7 +1622,7 @@ body {
 }
 
 .session-country {
-    color: #94a3b8;
+    color: var(--border-dark);
     font-size: 0.8rem;
 }
 
@@ -1599,11 +1634,11 @@ body {
 }
 
 .session-page-badge {
-    background: #0f172a;
-    color: #e2e8f0;
+    background: var(--primary-dark);
+    color: var(--text-light);
     padding: 0.15rem 0.5rem;
     border-radius: 4px;
-    border: 1px solid #334155;
+    border: 1px solid var(--bg-dark-border);
     font-family: monospace;
     display: inline-flex;
     align-items: center;
@@ -1611,26 +1646,26 @@ body {
 }
 
 .session-coords {
-    color: #64748b;
+    color: var(--border-dark);
     font-family: monospace;
 }
 
 .no-sessions-empty {
     text-align: center;
     padding: 3rem 1.5rem;
-    color: #94a3b8;
+    color: var(--border-dark);
 }
 
 .no-sessions-empty .empty-icon {
     font-size: 2.5rem;
-    color: #475569;
+    color: var(--bg-dark-border);
     margin-bottom: 0.75rem;
 }
 
 .no-sessions-empty p {
     font-weight: 600;
     margin: 0 0 0.25rem;
-    color: #cbd5e1;
+    color: var(--text-light);
 }
 
 .no-sessions-empty small {
@@ -1645,33 +1680,33 @@ body {
     padding: 1.25rem;
     box-sizing: border-box;
     gap: 1.25rem;
-    background: #090e17;
+    background: var(--bg-dark-panel);
     overflow-y: auto;
 }
 
 .map-view-wrapper {
-    background: #0f172a;
-    border: 1px solid #1e293b;
+    background: var(--bg-dark-panel);
+    border: 1px solid var(--bg-dark-border);
     border-radius: 12px;
     overflow: hidden;
-    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4);
     display: flex;
     flex-direction: column;
 }
 
 .map-toolbar {
-    background: #1e293b;
+    background: var(--bg-dark-card);
     padding: 0.65rem 1rem;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    border-bottom: 1px solid #334155;
+    border-bottom: 1px solid var(--bg-dark-border);
 }
 
 .map-status-text {
     font-size: 0.85rem;
     font-weight: 600;
-    color: #cbd5e1;
+    color: var(--text-light);
     display: flex;
     align-items: center;
     gap: 0.45rem;
@@ -1683,9 +1718,9 @@ body {
 }
 
 .map-mode-btn {
-    background: #0f172a;
-    border: 1px solid #334155;
-    color: #94a3b8;
+    background: var(--bg-dark-panel);
+    border: 1px solid var(--bg-dark-border);
+    color: var(--border-dark);
     padding: 0.35rem 0.75rem;
     border-radius: 6px;
     font-size: 0.8rem;
@@ -1695,18 +1730,18 @@ body {
     display: inline-flex;
     align-items: center;
     gap: 0.35rem;
-    transition: all 0.2s ease;
+    transition: var(--transition-smooth);
 }
 
 .map-mode-btn:hover {
-    color: #f8fafc;
-    border-color: #475569;
+    color: var(--text-light);
+    border-color: var(--accent-color);
 }
 
 .map-mode-btn.active {
-    background: var(--accent-gold, #c9a054);
-    color: #0f172a;
-    border-color: var(--accent-gold, #c9a054);
+    background: var(--accent-color);
+    color: var(--primary-dark);
+    border-color: var(--accent-color);
     font-weight: 700;
 }
 
@@ -1739,25 +1774,25 @@ body {
 .marker-pin-inner {
     width: 34px;
     height: 34px;
-    background: linear-gradient(135deg, #d4af37 0%, #b38938 100%);
+    background: linear-gradient(135deg, var(--accent-light) 0%, var(--accent-hover) 100%);
     border: 2px solid #ffffff;
     border-radius: 50% 50% 50% 0;
     transform: rotate(-45deg);
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 0 10px rgba(201, 160, 84, 0.5);
+    box-shadow: 0 0 10px rgba(200, 149, 56, 0.5);
 }
 
 .marker-pin-inner i {
     transform: rotate(45deg);
-    color: #0f172a;
+    color: var(--primary-dark);
     font-size: 14px;
 }
 
 .map-popup-card {
-    font-family: var(--font-body, 'Montserrat', sans-serif);
-    color: #0f172a;
+    font-family: var(--font-body);
+    color: var(--text-dark);
     padding: 0.2rem 0;
 }
 
@@ -1765,30 +1800,30 @@ body {
     font-size: 0.95rem;
     font-weight: 700;
     margin: 0 0 0.35rem;
-    color: #0f172a;
+    color: var(--primary-color);
 }
 
 .popup-sub {
     font-size: 0.8rem;
     margin: 0 0 0.2rem;
-    color: #475569;
+    color: var(--text-muted);
 }
 
 .popup-time {
     font-size: 0.75rem;
-    color: #94a3b8;
+    color: var(--border-dark);
     margin: 0.35rem 0 0;
-    border-top: 1px solid #e2e8f0;
+    border-top: 1px solid var(--border-color);
     padding-top: 0.25rem;
 }
 
 /* Inspector Card */
 .inspector-card {
-    background: #0f172a;
-    border: 1px solid rgba(201, 160, 84, 0.3);
+    background: var(--bg-dark-panel);
+    border: 1px solid var(--accent-subtle);
     border-radius: 12px;
     padding: 1.25rem;
-    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4);
 }
 
 .inspector-header {
@@ -1796,7 +1831,7 @@ body {
     align-items: center;
     justify-content: space-between;
     margin-bottom: 1.15rem;
-    border-bottom: 1px solid #1e293b;
+    border-bottom: 1px solid var(--bg-dark-border);
     padding-bottom: 0.85rem;
     gap: 1rem;
     flex-wrap: wrap;
@@ -1830,17 +1865,17 @@ body {
 }
 
 .inspector-heading {
-    font-family: var(--font-heading, 'Cinzel', serif);
+    font-family: var(--font-heading);
     font-size: 1.15rem;
     font-weight: 700;
-    color: #f8fafc;
+    color: var(--text-light);
     margin: 0;
 }
 
 .gmaps-external-link {
-    background: #1e293b;
-    border: 1px solid #334155;
-    color: var(--accent-gold, #c9a054);
+    background: var(--bg-dark-card);
+    border: 1px solid var(--bg-dark-border);
+    color: var(--accent-color);
     padding: 0.4rem 0.8rem;
     border-radius: 6px;
     font-size: 0.8rem;
@@ -1849,11 +1884,11 @@ body {
     display: inline-flex;
     align-items: center;
     gap: 0.4rem;
-    transition: all 0.2s ease;
+    transition: var(--transition-smooth);
 }
 
 .gmaps-external-link:hover {
-    background: #334155;
+    background: var(--primary-light);
     color: #ffffff;
 }
 
@@ -1864,8 +1899,8 @@ body {
 }
 
 .inspector-item {
-    background: #1e293b;
-    border: 1px solid #334155;
+    background: var(--bg-dark-card);
+    border: 1px solid var(--bg-dark-border);
     border-radius: 8px;
     padding: 0.75rem 1rem;
 }
@@ -1878,28 +1913,117 @@ body {
     display: block;
     font-size: 0.75rem;
     font-weight: 600;
-    color: #94a3b8;
+    color: var(--border-dark);
     text-transform: uppercase;
     letter-spacing: 0.5px;
     margin-bottom: 0.35rem;
 }
 
 .inspector-item-label i {
-    color: var(--accent-gold, #c9a054);
+    color: var(--accent-color);
     margin-right: 0.3rem;
 }
 
 .inspector-item-val {
     font-size: 0.9rem;
-    color: #f8fafc;
+    color: var(--text-light);
     font-weight: 500;
     word-break: break-all;
 }
 
-/* In-Page Unified Maps Layout Styles */
+/* In-Page Unified Maps Layout Styles (1.5x scaled) */
 .maps-auth-card {
-    margin: 1.5rem auto 3rem;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+    max-width: 680px;
+    margin: 3rem auto 5rem;
+    border-radius: 20px;
+    box-shadow: 0 20px 45px rgba(59, 36, 22, 0.12);
+    overflow: hidden;
+    background: var(--bg-white);
+    border: 1px solid var(--border-color);
+}
+
+.maps-auth-card .card-header {
+    background-color: var(--primary-color);
+    padding: 1.75rem 2.25rem;
+    text-align: center;
+}
+
+.maps-auth-card .card-header h3 {
+    font-family: var(--font-heading);
+    font-size: 1.95rem;
+    color: var(--accent-color);
+    margin: 0;
+    letter-spacing: 0.06em;
+}
+
+.maps-auth-card-body {
+    padding: 3.5rem 3.25rem 3rem;
+    background: var(--bg-white);
+}
+
+.maps-auth-card .admin-login-alert {
+    font-size: 1.15rem;
+    padding: 1rem 1.35rem;
+    border-radius: 10px;
+    margin-bottom: 1.75rem;
+    background: rgba(160, 60, 60, 0.1);
+    border: 1px solid rgba(160, 60, 60, 0.35);
+    color: #a03c3c;
+}
+
+.simplified-password-input {
+    width: 100%;
+    padding: 1.35rem 4rem 1.35rem 2rem;
+    border-radius: 999px;
+    border: 2px solid var(--border-dark);
+    background: var(--bg-light);
+    color: var(--text-dark);
+    font-size: 1.5rem;
+    box-sizing: border-box;
+    transition: var(--transition-smooth);
+}
+
+.simplified-password-input:focus {
+    background: var(--bg-white);
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 4px var(--accent-subtle);
+    color: var(--text-dark);
+    outline: none;
+}
+
+.maps-auth-card .password-toggle-btn {
+    right: 1.25rem;
+    font-size: 1.4rem;
+    color: var(--text-muted);
+}
+
+.maps-auth-card .password-toggle-btn:hover {
+    color: var(--primary-color);
+}
+
+.simplified-submit-btn {
+    margin: 2.25rem auto 0;
+    width: auto;
+    min-width: 220px;
+    padding: 1.05rem 3.5rem;
+    border-radius: 999px;
+    font-size: 1.5rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, var(--accent-color) 0%, var(--accent-hover) 100%);
+    color: var(--primary-dark);
+    cursor: pointer;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: var(--transition-smooth);
+    box-shadow: 0 6px 18px rgba(200, 149, 56, 0.4);
+}
+
+.simplified-submit-btn:hover {
+    background: linear-gradient(135deg, var(--accent-light) 0%, var(--accent-color) 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 22px rgba(200, 149, 56, 0.55);
 }
 
 .maps-dashboard-wrapper {
@@ -1909,8 +2033,8 @@ body {
 }
 
 .maps-dashboard-header {
-    background: #0f172a;
-    border: 1px solid #1e293b;
+    background: var(--primary-dark);
+    border: 1px solid var(--bg-dark-border);
     border-radius: 12px;
     padding: 0.85rem 1.25rem;
     margin-bottom: 1.25rem;
@@ -1928,8 +2052,8 @@ body {
 }
 
 .maps-live-badge {
-    background: rgba(34, 197, 94, 0.15);
-    border: 1px solid rgba(34, 197, 94, 0.4);
+    background: rgba(74, 222, 128, 0.15);
+    border: 1px solid rgba(74, 222, 128, 0.4);
     color: #4ade80;
     padding: 0.25rem 0.65rem;
     border-radius: 999px;
@@ -1945,9 +2069,9 @@ body {
 }
 
 .maps-subheading {
-    font-family: var(--font-heading, 'Cinzel', serif);
+    font-family: var(--font-heading);
     font-size: 1.1rem;
-    color: #f8fafc;
+    color: var(--text-light);
     margin: 0;
     font-weight: 700;
 }

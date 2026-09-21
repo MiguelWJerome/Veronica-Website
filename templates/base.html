@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Our Lady of Mount Carmel Traditional Catholic Church | CMRI Harrodsburg{% endblock %}</title>
+    <meta name="description" content="{% block meta_description %}CMRI Our Lady of Mount Carmel Traditional Catholic Church in Harrodsburg, KY. Dedicated to preserving the traditional Catholic faith. Find Mass locations and contact information.{% endblock %}">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- CSS Stylesheet -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    {% block extra_head %}{% endblock %}
+</head>
+<body class="{% block body_class %}{% endblock %}">
+
+    <!-- Top Hero Banner Image -->
+    <header class="hero-banner">
+        <img src="{{ url_for('static', filename='images/our_lady_banner_header.jpg') }}" alt="Our Lady of Mount Carmel Church Banner" class="hero-image">
+        <div class="hero-overlay"></div>
+    </header>
+
+    <!-- Navigation & Search Bar Wrapper -->
+    <nav class="navigation-bar">
+        <div class="nav-container">
+            <!-- Search Box -->
+            <form action="{{ url_for('search') }}" method="GET" class="search-box">
+                <i class="fa fa-search search-icon"></i>
+                <input type="text" name="q" value="{{ query if query is defined and query else '' }}" placeholder="Search..." aria-label="Search site">
+            </form>
+
+            <!-- Hamburger Menu for Mobile -->
+            <button class="menu-toggle" id="mobile-menu-btn" aria-label="Toggle Navigation Menu">
+                <i class="fa fa-bars"></i>
+            </button>
+
+            <!-- Navigation Links -->
+            <div class="nav-menu" id="nav-menu">
+                <a href="{{ url_for('home') }}" class="nav-link {% if request.endpoint == 'home' %}active{% endif %}">Home</a>
+                <a href="#donate" class="nav-link">Donate</a>
+                <a href="{{ url_for('contact') }}" class="nav-link {% if request.endpoint == 'contact' %}active{% endif %}">Contact</a>
+                <a href="#newsletters" class="nav-link">Newsletters</a>
+                <a href="#mass-times" class="nav-link">Mass times</a>
+                <a href="{{ url_for('beliefs') }}" class="nav-link {% if request.endpoint == 'beliefs' %}active{% endif %}">Beliefs</a>
+                <a href="{{ url_for('gallery') }}" class="nav-link {% if request.endpoint == 'gallery' %}active{% endif %}">Gallery</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content Area -->
+    <main class="content-container">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Global Footer -->
+    <footer class="footer">
+        <p>&copy; 2026 Our Lady of Mount Carmel Traditional Catholic Church. All rights reserved.</p>
+    </footer>
+
+    <!-- Main JavaScript for Navigation and Modal Notification -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    
+    {% block scripts %}{% endblock %}
+</body>
+</html>

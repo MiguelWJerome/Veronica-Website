@@ -1,120 +1,65 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Search Results | Our Lady of Mount Carmel</title>
-    <meta name="description" content="Search results for Our Lady of Mount Carmel Traditional Catholic Church website.">
-    <!-- Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
-    <!-- CSS stylesheet -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
-    <!-- FontAwesome for icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-</head>
-<body>
-    <!-- Top Hero Banner Image -->
-    <header class="hero-banner">
-        <img src="{{ url_for('static', filename='images/homepage_cover.jpg') }}" alt="Our Lady of Mount Carmel Church Banner" class="hero-image">
-        <div class="hero-overlay"></div>
-    </header>
+{% extends "base.html" %}
 
-    <!-- Navigation & Search Bar Wrapper -->
-    <nav class="navigation-bar">
-        <div class="nav-container">
-            <!-- Search Box Form -->
-            <form action="{{ url_for('search') }}" method="GET" class="search-box">
-                <i class="fa fa-search search-icon"></i>
-                <input type="text" name="q" value="{{ query if query else '' }}" placeholder="Search..." aria-label="Search site">
+{% block title %}Search Results | Our Lady of Mount Carmel{% endblock %}
+
+{% block meta_description %}Search results for Our Lady of Mount Carmel Traditional Catholic Church website.{% endblock %}
+
+{% block content %}
+<section class="search-section">
+    <h1 class="main-title search-page-title"><i class="fa fa-search icon-accent search-title-icon"></i> Search Results</h1>
+    
+    <div class="search-results-box">
+        <!-- Search summary bar -->
+        <div class="search-header-info">
+            {% if query %}
+                <p class="search-summary-text">
+                    Showing results for <span class="search-query-highlight">"{{ query }}"</span>
+                    <span class="search-count-badge">{{ total_results }} page{{ 's' if total_results != 1 else '' }} found</span>
+                </p>
+            {% else %}
+                <p class="search-summary-text">
+                    Please enter a search term above or below to search across the website.
+                </p>
+            {% endif %}
+
+            <!-- Dedicated search refinement input within the card -->
+            <form action="{{ url_for('search') }}" method="GET" class="search-inline-form">
+                <input type="text" name="q" value="{{ query if query else '' }}" placeholder="Refine your search..." class="search-inline-input" aria-label="Search query">
+                <button type="submit" class="search-inline-btn">
+                    <i class="fa fa-search"></i> Search
+                </button>
             </form>
-
-            <!-- Hamburger menu for mobile -->
-            <button class="menu-toggle" id="mobile-menu-btn" aria-label="Toggle Navigation Menu">
-                <i class="fa fa-bars"></i>
-            </button>
-
-            <!-- Navigation Links -->
-            <div class="nav-menu" id="nav-menu">
-                <a href="{{ url_for('home') }}" class="nav-link">Home</a>
-                <a href="#donate" class="nav-link">Donate</a>
-                <a href="{{ url_for('contact') }}" class="nav-link">Contact</a>
-                <a href="#newsletters" class="nav-link">Newsletters</a>
-                <a href="#mass-times" class="nav-link">Mass times</a>
-                <a href="{{ url_for('beliefs') }}" class="nav-link">Beliefs</a>
-                <a href="{{ url_for('gallery') }}" class="nav-link">Gallery</a>
-            </div>
         </div>
-    </nav>
 
-    <!-- Main Content Area -->
-    <main class="content-container">
-        <section class="search-section">
-            <h1 class="main-title search-page-title"><i class="fa fa-search icon-accent search-title-icon"></i> Search Results</h1>
-            
-            <div class="search-results-box">
-                <!-- Search summary bar -->
-                <div class="search-header-info">
-                    {% if query %}
-                        <p class="search-summary-text">
-                            Showing results for <span class="search-query-highlight">"{{ query }}"</span>
-                            <span class="search-count-badge">{{ total_results }} page{{ 's' if total_results != 1 else '' }} found</span>
-                        </p>
-                    {% else %}
-                        <p class="search-summary-text">
-                            Please enter a search term above or below to search across the website.
-                        </p>
-                    {% endif %}
-
-                    <!-- Dedicated search refinement input within the card -->
-                    <form action="{{ url_for('search') }}" method="GET" class="search-inline-form">
-                        <input type="text" name="q" value="{{ query if query else '' }}" placeholder="Refine your search..." class="search-inline-input" aria-label="Search query">
-                        <button type="submit" class="search-inline-btn">
-                            <i class="fa fa-search"></i> Search
-                        </button>
-                    </form>
-                </div>
-
-                <!-- Results list -->
-                {% if results and results|length > 0 %}
-                    <div class="search-results-list">
-                        {% for item in results %}
-                            <a href="{{ item.url }}" class="search-result-card" title="Open {{ item.title }} and view matches">
-                                <div class="result-card-header">
-                                    <h2 class="result-title">
-                                        {{ item.title }}
-                                    </h2>
-                                    <span class="result-endpoint-badge">
-                                        <i class="fa fa-compass"></i> /{{ item.endpoint }}
-                                    </span>
-                                </div>
-                                <div class="result-snippets">
-                                    {% for snippet in item.snippets %}
-                                        <p class="result-snippet-text">{{ snippet|safe }}</p>
-                                    {% endfor %}
-                                </div>
-                            </a>
-                        {% endfor %}
-                    </div>
-                {% elif query %}
-                    <div class="search-empty-state">
-                        <i class="fa fa-file-circle-question empty-icon"></i>
-                        <h3>No matches found</h3>
-                        <p>We couldn't find any content matching <strong>"{{ query }}"</strong>.</p>
-                        <p class="empty-hint">Try checking for typos or searching for a broader term like <em>Mass</em>, <em>Beliefs</em>, <em>Latin</em>, or <em>Harrodsburg</em>.</p>
-                    </div>
-                {% endif %}
+        <!-- Results list -->
+        {% if results and results|length > 0 %}
+            <div class="search-results-list">
+                {% for item in results %}
+                    <a href="{{ item.url }}" class="search-result-card" title="Open {{ item.title }} and view matches">
+                        <div class="result-card-header">
+                            <h2 class="result-title">
+                                {{ item.title }}
+                            </h2>
+                            <span class="result-endpoint-badge">
+                                <i class="fa fa-compass"></i> /{{ item.endpoint }}
+                            </span>
+                        </div>
+                        <div class="result-snippets">
+                            {% for snippet in item.snippets %}
+                                <p class="result-snippet-text">{{ snippet|safe }}</p>
+                            {% endfor %}
+                        </div>
+                    </a>
+                {% endfor %}
             </div>
-        </section>
-    </main>
-
-    <!-- Footer -->
-    <footer class="footer">
-        <p>&copy; 2026 Our Lady of Mount Carmel Traditional Catholic Church. All rights reserved.</p>
-    </footer>
-
-    <!-- Main JavaScript for Navigation, Modal, and Highlighting -->
-    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
-</body>
-</html>
+        {% elif query %}
+            <div class="search-empty-state">
+                <i class="fa fa-file-circle-question empty-icon"></i>
+                <h3>No matches found</h3>
+                <p>We couldn't find any content matching <strong>"{{ query }}"</strong>.</p>
+                <p class="empty-hint">Try checking for typos or searching for a broader term like <em>Mass</em>, <em>Beliefs</em>, <em>Latin</em>, or <em>Harrodsburg</em>.</p>
+            </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

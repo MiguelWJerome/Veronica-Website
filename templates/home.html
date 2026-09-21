@@ -1,92 +1,37 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Our Lady of Mount Carmel Traditional Catholic Church | CMRI Harrodsburg</title>
-    <meta name="description" content="CMRI Our Lady of Mount Carmel Traditional Catholic Church in Harrodsburg, KY. Dedicated to preserving the traditional Catholic faith. Find Mass locations and contact information.">
-    <!-- Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
-    <!-- CSS stylesheet -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
-    <!-- FontAwesome for icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-</head>
-<body>
-    <!-- Top Hero Banner Image -->
-    <header class="hero-banner">
-        <img src="{{ url_for('static', filename='images/homepage_cover.jpg') }}" alt="Our Lady of Mount Carmel Church Banner" class="hero-image">
-        <div class="hero-overlay"></div>
-    </header>
+{% extends "base.html" %}
 
-    <!-- Navigation & Search Bar Wrapper -->
-    <nav class="navigation-bar">
-        <div class="nav-container">
-            <!-- Search Box -->
-            <form action="{{ url_for('search') }}" method="GET" class="search-box">
-                <i class="fa fa-search search-icon"></i>
-                <input type="text" name="q" placeholder="Search..." aria-label="Search site">
-            </form>
+{% block title %}Our Lady of Mount Carmel Traditional Catholic Church | CMRI Harrodsburg{% endblock %}
 
-            <!-- Hamburger menu for mobile -->
-            <button class="menu-toggle" id="mobile-menu-btn" aria-label="Toggle Navigation Menu">
-                <i class="fa fa-bars"></i>
-            </button>
+{% block meta_description %}CMRI Our Lady of Mount Carmel Traditional Catholic Church in Harrodsburg, KY. Dedicated to preserving the traditional Catholic faith. Find Mass locations and contact information.{% endblock %}
 
-            <!-- Navigation Links -->
-            <div class="nav-menu" id="nav-menu">
-                <a href="{{ url_for('home') }}" class="nav-link active">Home</a>
-                <a href="#donate" class="nav-link">Donate</a>
-                <a href="{{ url_for('contact') }}" class="nav-link">Contact</a>
-                <a href="#newsletters" class="nav-link">Newsletters</a>
-                <a href="#mass-times" class="nav-link">Mass times</a>
-                <a href="{{ url_for('beliefs') }}" class="nav-link">Beliefs</a>
-                <a href="{{ url_for('gallery') }}" class="nav-link">Gallery</a>
+{% block content %}
+<section class="info-section">
+    <h1 class="main-title">CMRI: Our Lady of Mount Carmel Traditional Catholic Church</h1>
+    <p class="cmri-info">
+        For more information about CMRI go to 
+        <a href="https://www.cmri.org" target="_blank" rel="noopener" class="external-link">CMRI.org <i class="fa fa-external-link-alt small-icon"></i></a>
+    </p>
+</section>
+
+<section class="location-section">
+    <h2 class="section-title"><i class="fa fa-map-marker-alt title-icon"></i> Mass location</h2>
+    
+    <div class="location-card">
+        <div class="card-header">
+            <h3>Harrodsburg</h3>
+        </div>
+        <div class="card-body">
+            <p class="church-name">Our Lady of Mount Carmel Church</p>
+            <address class="church-address">
+                <p class="address-line"><i class="fa fa-road icon-accent"></i> 110 West Poplar Street</p>
+                <p class="address-line">Harrodsburg, KY 40330</p>
+            </address>
+            <div class="contact-info">
+                <a href="tel:5025451730" class="phone-link">
+                    <i class="fa fa-phone icon-accent"></i> Contact: (502) 545 (1730)
+                </a>
             </div>
         </div>
-    </nav>
-
-    <!-- Main Content Area -->
-    <main class="content-container">
-        <section class="info-section">
-            <h1 class="main-title">CMRI: Our Lady of Mount Carmel Traditional Catholic Church</h1>
-            <p class="cmri-info">
-                For more information about CMRI go to 
-                <a href="https://www.cmri.org" target="_blank" rel="noopener" class="external-link">CMRI.org <i class="fa fa-external-link-alt small-icon"></i></a>
-            </p>
-        </section>
-
-        <section class="location-section">
-            <h2 class="section-title"><i class="fa fa-map-marker-alt title-icon"></i> Mass location</h2>
-            
-            <div class="location-card">
-                <div class="card-header">
-                    <h3>Harrodsburg</h3>
-                </div>
-                <div class="card-body">
-                    <p class="church-name">Our Lady of Mount Carmel Church</p>
-                    <address class="church-address">
-                        <p class="address-line"><i class="fa fa-road icon-accent"></i> 110 West Poplar Street</p>
-                        <p class="address-line">Harrodsburg, KY 40330</p>
-                    </address>
-                    <div class="contact-info">
-                        <a href="tel:5025451730" class="phone-link">
-                            <i class="fa fa-phone icon-accent"></i> Contact: (502) 545 (1730)
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </section>
-    </main>
-
-    <!-- Footer -->
-    <footer class="footer">
-        <p>&copy; 2026 Our Lady of Mount Carmel Traditional Catholic Church. All rights reserved.</p>
-    </footer>
-
-    <!-- Main JavaScript for Navigation and Modal Notification -->
-    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
-</body>
-</html>
+    </div>
+</section>
+{% endblock %}
