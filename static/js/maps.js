@@ -1,12 +1,33 @@
 /**
  * Veronica Website - Admin Visitor Maps Dashboard Controller
- * Handles seamless in-page authentication, session filtering,
- * interactive Leaflet map rendering, Google Maps embed sync, and live visitor inspection.
+ * Implements wireframe specifications:
+ * 1. Removes .hero-banner on /maps so the navigation bar sits directly at top.
+ * 2. Interactive Timeline Dual-Slider with 5% edge padding and clickable ticks per visit.
+ * 3. Visitor Portfolio / Details Card directly under timeline with [x] deselect.
+ * 4. Displaying max [N] filter showing newest visits in timeline range, backed by system_variables.db.
+ * 5. Bidirectional selection (tick <-> marker <-> portfolio) with Marian Blue glowing tick.
  */
 
 document.addEventListener('DOMContentLoaded', () => {
+    // 1. Remove .hero-banner from DOM on /maps to keep navbar clean and at the top
+    const heroBanner = document.querySelector('.hero-banner');
+    if (heroBanner) {
+        heroBanner.remove();
+    }
+
+    // State & Data
     let visits = Array.isArray(window.VISITS_DATA) ? window.VISITS_DATA : [];
     let isAuthenticated = Boolean(window.SERVER_IS_AUTHENTICATED);
+    let defaultMax = Number(window.DEFAULT_MAP_MAX) || 50;
+    let selectedVisitId = null;
+
+    // Normalize timestamps to epoch_ms
+    visits.forEach((v) => {
+        if (!v.epoch_ms) {
+            const parsed = v.timestamp ? Date.parse(v.timestamp.replace(' ', 'T')) : NaN;
+            v.epoch_ms = !isNaN(parsed) ? parsed : Date.now();
+        }
+    });
 
     // Auth Elements
     const loginContainer = document.getElementById('maps-login-container');
@@ -19,35 +40,47 @@ document.addEventListener('DOMContentLoaded', () => {
     const errorText = document.getElementById('login-error-text');
     const submitBtn = document.getElementById('login-submit-btn');
 
-    // Dashboard UI Elements
-    const filterInput = document.getElementById('session-filter-input');
-    const sessionCounter = document.getElementById('session-counter');
-    const sessionsList = document.getElementById('sessions-list');
+    // Dashboard Topbar Stats Elements
     const statTotalVisits = document.getElementById('stat-total-visits');
     const statUniqueIps = document.getElementById('stat-unique-ips');
     const statLocations = document.getElementById('stat-locations');
-    const btnLeaflet = document.getElementById('btn-leaflet-view');
-    const btnGoogle = document.getElementById('btn-google-view');
-    const interactiveMapEl = document.getElementById('interactive-map');
-    const googleMapContainer = document.getElementById('google-maps-frame-container');
-    const googleMapIframe = document.getElementById('google-map-iframe');
 
-    // Inspector elements
-    const inspectTitle = document.getElementById('inspect-location-title');
-    const inspectGmapsLink = document.getElementById('inspect-gmaps-link');
-    const inspectIp = document.getElementById('inspect-ip');
+    // Timeline Elements
+    const timelineRangeLabel = document.getElementById('timeline-range-label');
+    const timelineVisitsCount = document.getElementById('timeline-visits-count');
+    const timelineHighlight = document.getElementById('timeline-highlight-range');
+    const timelineTicksContainer = document.getElementById('timeline-ticks-container');
+    const sliderStart = document.getElementById('timeline-range-start');
+    const sliderEnd = document.getElementById('timeline-range-end');
+    const resetTimelineBtn = document.getElementById('timeline-reset-btn');
+
+    // Portfolio Elements
+    const portfolioCard = document.getElementById('portfolio-card');
+    const portfolioPlaceholder = document.getElementById('portfolio-placeholder');
+    const portfolioContent = document.getElementById('portfolio-content');
+    const portfolioCloseBtn = document.getElementById('portfolio-close-btn');
+    const inspectLocationTitle = document.getElementById('inspect-location-title');
+    const inspectPostalBadge = document.getElementById('inspect-postal-badge');
     const inspectTime = document.getElementById('inspect-time');
+    const inspectIp = document.getElementById('inspect-ip');
     const inspectPage = document.getElementById('inspect-page');
     const inspectCoords = document.getElementById('inspect-coords');
     const inspectOrg = document.getElementById('inspect-org');
     const inspectUa = document.getElementById('inspect-ua');
+    const inspectGmapsLink = document.getElementById('inspect-gmaps-link');
+
+    // Map Elements & Controls
+    const mapMaxInput = document.getElementById('map-max-input');
+    const mapStatusBadge = document.getElementById('map-status-badge');
+    const interactiveMapEl = document.getElementById('interactive-map');
 
     let map = null;
     let markers = [];
-    let currentMode = 'leaflet';
-    let currentSelectedVisit = null;
+    let minEpoch = 0;
+    let maxEpoch = 0;
+    let saveMaxTimeout = null;
 
-    // 1. Password Visibility Toggle
+    // --- 2. Password Visibility Toggle ---
     if (toggleBtn && pwInput && pwIcon) {
         toggleBtn.addEventListener('click', () => {
             if (pwInput.type === 'password') {
@@ -60,7 +93,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // 2. Seamless In-Page Login Handler
+    // --- 3. Seamless In-Page Login Handler ---
     if (loginForm) {
         loginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -69,7 +102,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (submitBtn) {
                 submitBtn.disabled = true;
-                submitBtn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Submitting...';
+                submitBtn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Checking...';
             }
             if (errorAlert) errorAlert.style.display = 'none';
 
@@ -83,21 +116,32 @@ document.addEventListener('DOMContentLoaded', () => {
                 const data = await res.json();
 
                 if (res.ok && data.status === 'ok') {
-                    // Update dataset and stats
                     visits = data.visits || [];
+                    defaultMax = Number(data.default_max) || 50;
+
+                    // Normalize timestamps
+                    visits.forEach((v) => {
+                        if (!v.epoch_ms) {
+                            const parsed = v.timestamp ? Date.parse(v.timestamp.replace(' ', 'T')) : NaN;
+                            v.epoch_ms = !isNaN(parsed) ? parsed : Date.now();
+                        }
+                    });
+
                     if (data.stats) {
                         if (statTotalVisits) statTotalVisits.textContent = data.stats.total_visits;
                         if (statUniqueIps) statUniqueIps.textContent = data.stats.unique_ips;
                         if (statLocations) statLocations.textContent = data.stats.unique_locations;
                     }
 
-                    // Seamless in-page transition: Hide login form and show dashboard
+                    if (mapMaxInput) {
+                        mapMaxInput.value = defaultMax;
+                    }
+
                     if (loginContainer) loginContainer.style.display = 'none';
                     if (dashboardContainer) dashboardContainer.style.display = 'block';
 
                     isAuthenticated = true;
-                    renderSessionsList(visits);
-                    initOrRefreshDashboard();
+                    initDashboard();
                 } else {
                     if (errorAlert) {
                         errorText.textContent = data.message || 'Invalid Speray Admin Password. Please try again.';
@@ -109,7 +153,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 }
             } catch (err) {
-                // Fallback to standard form submission if fetch is interrupted
                 loginForm.submit();
             } finally {
                 if (submitBtn) {
@@ -120,152 +163,293 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // 3. Render Session Cards dynamically
-    function renderSessionsList(items) {
-        if (!sessionsList) return;
-        sessionsList.innerHTML = '';
+    // --- 4. Initialize Dashboard ---
+    function initDashboard() {
+        if (!interactiveMapEl) return;
 
-        if (!items || items.length === 0) {
-            sessionsList.innerHTML = `
-                <div class="no-sessions-empty" id="no-sessions-empty">
-                    <i class="fa fa-chart-line-down empty-icon"></i>
-                    <p>No visitor sessions logged yet.</p>
-                    <small>Visits to public pages will automatically appear here in real time.</small>
-                </div>
-            `;
-            if (sessionCounter) sessionCounter.textContent = '0';
+        computeTimelineBounds();
+        initLeafletMap();
+        renderTimelineTicks();
+        updateTimelineAndMap();
+
+        // Default to deselect placeholder
+        clearSelection();
+    }
+
+    // Compute min and max epoch timestamps across visits
+    function computeTimelineBounds() {
+        if (!visits || visits.length === 0) {
+            const now = Date.now();
+            minEpoch = now - 7 * 24 * 3600 * 1000;
+            maxEpoch = now;
             return;
         }
 
-        if (sessionCounter) sessionCounter.textContent = items.length;
+        const epochs = visits.map(v => v.epoch_ms).filter(Boolean);
+        minEpoch = Math.min(...epochs);
+        maxEpoch = Math.max(...epochs);
 
-        items.forEach((v, index) => {
-            const card = document.createElement('div');
-            card.className = `session-card ${index === 0 ? 'active' : ''}`;
-            card.dataset.id = v.id;
-            card.dataset.ip = v.ip_address || '';
-            card.dataset.city = v.city || '';
-            card.dataset.region = v.region || '';
-            card.dataset.country = v.country || '';
-            card.dataset.lat = v.latitude;
-            card.dataset.lng = v.longitude;
-            card.dataset.page = v.page_visited || '';
-            card.dataset.time = v.timestamp || '';
-            card.dataset.org = v.org || '';
-            card.dataset.ua = v.user_agent || '';
+        // If min equals max (e.g., only 1 visit), pad by +/- 24 hours
+        if (minEpoch === maxEpoch) {
+            minEpoch -= 24 * 3600 * 1000;
+            maxEpoch += 24 * 3600 * 1000;
+        }
+    }
 
-            const latDisplay = typeof v.latitude === 'number' ? v.latitude.toFixed(2) : (v.latitude || '0.00');
-            const lngDisplay = typeof v.longitude === 'number' ? v.longitude.toFixed(2) : (v.longitude || '0.00');
+    // --- 5. Leaflet Map Initialization ---
+    function initLeafletMap() {
+        if (map) return;
 
-            card.innerHTML = `
-                <div class="session-card-top">
-                    <span class="session-ip"><i class="fa fa-network-wired"></i> ${v.ip_address || '127.0.0.1'}</span>
-                    <span class="session-time">${v.timestamp || ''}</span>
-                </div>
-                <div class="session-location">
-                    <i class="fa fa-location-dot icon-accent"></i>
-                    <strong>${v.city || 'Unknown'}${v.region ? ', ' + v.region : ''}</strong>
-                    <span class="session-country">(${v.country || 'US'})</span>
-                </div>
-                <div class="session-card-bottom">
-                    <span class="session-page-badge"><i class="fa fa-file-code"></i> ${v.page_visited || '/home'}</span>
-                    <span class="session-coords">${latDisplay}, ${lngDisplay}</span>
-                </div>
-            `;
+        let initialLat = 37.7640;
+        let initialLng = -84.8436;
 
-            card.addEventListener('click', () => {
-                selectVisit(v, true);
+        if (visits.length > 0 && visits[0].latitude && visits[0].longitude) {
+            initialLat = Number(visits[0].latitude);
+            initialLng = Number(visits[0].longitude);
+        }
+
+        map = L.map('interactive-map', {
+            center: [initialLat, initialLng],
+            zoom: visits.length > 1 ? 4 : 11,
+            zoomControl: true
+        });
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+            maxZoom: 19
+        }).addTo(map);
+
+        // Resize fix
+        setTimeout(() => {
+            if (map) map.invalidateSize();
+        }, 300);
+    }
+
+    // --- 6. Render Timeline Ticks ---
+    // The timeline ticks container has left: 5% and right: 5% (effective 90% width),
+    // giving each tick a built-in 5% time cushion on both ends.
+    function renderTimelineTicks() {
+        if (!timelineTicksContainer) return;
+        timelineTicksContainer.innerHTML = '';
+
+        if (!visits || visits.length === 0) return;
+
+        const timeSpan = maxEpoch - minEpoch;
+        if (timeSpan <= 0) return;
+
+        visits.forEach((v) => {
+            const pct = Math.max(0, Math.min(100, ((v.epoch_ms - minEpoch) / timeSpan) * 100));
+            const tick = document.createElement('div');
+            tick.className = 'timeline-tick';
+            tick.dataset.id = v.id;
+            tick.style.left = `${pct}%`;
+
+            const visitDate = new Date(v.epoch_ms).toLocaleString([], {
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+            tick.title = `${v.city || 'Visitor'} (${v.ip_address || '127.0.0.1'}) • ${visitDate}`;
+
+            if (selectedVisitId === v.id) {
+                tick.classList.add('glowing');
+            }
+
+            // Clicking any tick mark illuminates it in Marian blue glow and populates the portfolio card
+            tick.addEventListener('click', (e) => {
+                e.stopPropagation();
+                selectVisit(v.id, { panMap: true });
             });
 
-            sessionsList.appendChild(card);
+            timelineTicksContainer.appendChild(tick);
         });
     }
 
-    // 4. Initialize or Refresh Map & Live Inspector
-    function initOrRefreshDashboard() {
-        if (!visits || visits.length === 0) return;
-        currentSelectedVisit = visits[0];
+    // --- 7. Dual Range Timeline Logic & Map Filtering ---
+    function updateTimelineAndMap() {
+        if (!sliderStart || !sliderEnd) return;
 
-        if (!map && interactiveMapEl) {
-            const defaultLat = currentSelectedVisit.latitude || 37.7640;
-            const defaultLng = currentSelectedVisit.longitude || -84.8436;
+        let startVal = parseInt(sliderStart.value, 10);
+        let endVal = parseInt(sliderEnd.value, 10);
 
-            map = L.map('interactive-map', {
-                center: [defaultLat, defaultLng],
-                zoom: 12,
-                zoomControl: true
-            });
-
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-                maxZoom: 19
-            }).addTo(map);
+        // Prevent handles from crossing each other
+        if (startVal > endVal) {
+            const temp = startVal;
+            startVal = endVal;
+            endVal = temp;
+            sliderStart.value = startVal;
+            sliderEnd.value = endVal;
         }
 
-        // Refresh markers
-        if (map) {
-            markers.forEach(m => map.removeLayer(m.marker));
-            markers = [];
-
-            const goldIcon = L.divIcon({
-                className: 'custom-gold-marker',
-                html: `<div class="marker-pin-outer"><div class="marker-pin-inner"><i class="fa fa-church"></i></div></div>`,
-                iconSize: [34, 42],
-                iconAnchor: [17, 42],
-                popupAnchor: [0, -38]
-            });
-
-            visits.forEach((v) => {
-                if (v.latitude && v.longitude) {
-                    const marker = L.marker([v.latitude, v.longitude], { icon: goldIcon }).addTo(map);
-                    const popupContent = `
-                        <div class="map-popup-card">
-                            <h4 class="popup-title">${v.city || 'Unknown'}${v.region ? ', ' + v.region : ''}</h4>
-                            <p class="popup-sub"><i class="fa fa-network-wired"></i> ${v.ip_address}</p>
-                            <p class="popup-sub"><i class="fa fa-file-lines"></i> ${v.page_visited}</p>
-                            <p class="popup-time">${v.timestamp}</p>
-                        </div>
-                    `;
-                    marker.bindPopup(popupContent);
-                    marker.on('click', () => {
-                        selectVisit(v, false);
-                    });
-                    markers.push({ id: v.id, marker: marker, data: v });
-                }
-            });
-
-            setTimeout(() => {
-                map.invalidateSize();
-                if (markers.length > 0) {
-                    markers[0].marker.openPopup();
-                }
-            }, 250);
+        // Update visual highlight bar spanning between handles (track has 5% padding)
+        const pctStart = (startVal / 1000) * 90 + 5;
+        const pctEnd = (endVal / 1000) * 90 + 5;
+        if (timelineHighlight) {
+            timelineHighlight.style.left = `${pctStart}%`;
+            timelineHighlight.style.width = `${Math.max(0, pctEnd - pctStart)}%`;
         }
 
-        selectVisit(currentSelectedVisit, false);
-    }
+        // Calculate time range
+        const windowStart = minEpoch + (maxEpoch - minEpoch) * (startVal / 1000);
+        const windowEnd = minEpoch + (maxEpoch - minEpoch) * (endVal / 1000);
 
-    // 5. Select & Inspect Visit
-    function selectVisit(v, panMap = true) {
-        if (!v) return;
-        currentSelectedVisit = v;
+        // Format date/time labels
+        const formatDate = (ms) => {
+            return new Date(ms).toLocaleDateString([], {
+                month: 'short',
+                day: 'numeric',
+                year: 'numeric'
+            });
+        };
 
-        // Highlight active card in sidebar
-        const allCards = document.querySelectorAll('.session-card');
-        allCards.forEach(c => {
-            if (parseInt(c.dataset.id) === v.id) {
-                c.classList.add('active');
-                c.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-            } else {
-                c.classList.remove('active');
+        if (timelineRangeLabel) {
+            timelineRangeLabel.textContent = `${formatDate(windowStart)} – ${formatDate(windowEnd)}`;
+        }
+
+        // Filter visits falling within current timeline window
+        const inWindowVisits = visits.filter(v => v.epoch_ms >= windowStart && v.epoch_ms <= windowEnd);
+
+        if (timelineVisitsCount) {
+            timelineVisitsCount.textContent = `${inWindowVisits.length} visits`;
+        }
+
+        // Update visual dimming of ticks outside window
+        const allTicks = timelineTicksContainer.querySelectorAll('.timeline-tick');
+        allTicks.forEach(tick => {
+            const id = parseInt(tick.dataset.id, 10);
+            const v = visits.find(item => item.id === id);
+            if (v) {
+                if (v.epoch_ms >= windowStart && v.epoch_ms <= windowEnd) {
+                    tick.style.opacity = '1';
+                } else {
+                    tick.style.opacity = '0.35';
+                }
             }
         });
 
-        // Update Live Inspector Card
+        // "Displaying Max [N]" logic:
+        // Sort visits in window descending by epoch_ms (newest first)
+        const sortedInWindow = [...inWindowVisits].sort((a, b) => b.epoch_ms - a.epoch_ms);
+
+        let maxN = defaultMax;
+        if (mapMaxInput) {
+            const parsed = parseInt(mapMaxInput.value, 10);
+            if (!isNaN(parsed) && parsed > 0) {
+                maxN = parsed;
+            }
+        }
+
+        const displayedVisits = sortedInWindow.slice(0, maxN);
+
+        if (mapStatusBadge) {
+            mapStatusBadge.textContent = `Showing ${displayedVisits.length} of ${inWindowVisits.length}`;
+        }
+
+        // Refresh Map Markers
+        renderMapMarkers(displayedVisits);
+    }
+
+    // --- 8. Render Map Markers with Custom Marian Blue Style ---
+    function renderMapMarkers(displayedVisits) {
+        if (!map) return;
+
+        // Clear existing markers
+        markers.forEach(m => map.removeLayer(m.marker));
+        markers = [];
+
+        displayedVisits.forEach((v) => {
+            if (!v.latitude || !v.longitude) return;
+
+            const isSelected = (v.id === selectedVisitId);
+
+            const marianIcon = L.divIcon({
+                className: `custom-marian-marker ${isSelected ? 'selected' : ''}`,
+                html: `<div class="marian-marker-pin" id="marker-pin-${v.id}"><i class="fa fa-map-pin"></i></div>`,
+                iconSize: [32, 32],
+                iconAnchor: [16, 32],
+                popupAnchor: [0, -32]
+            });
+
+            const marker = L.marker([v.latitude, v.longitude], { icon: marianIcon }).addTo(map);
+
+            const popupContent = `
+                <div class="map-popup-card">
+                    <h5 class="popup-title">${v.city || 'Visitor Location'}${v.region ? ', ' + v.region : ''}</h5>
+                    <p class="popup-sub"><i class="fa fa-network-wired icon-secondary"></i> ${v.ip_address || '127.0.0.1'}</p>
+                    <p class="popup-sub"><i class="fa fa-file-code icon-secondary"></i> ${v.page_visited || '/home'}</p>
+                    <p class="popup-sub"><i class="fa fa-clock icon-secondary"></i> ${v.timestamp || ''}</p>
+                </div>
+            `;
+            marker.bindPopup(popupContent);
+
+            // Selecting a pin selects the visit and populates portfolio card
+            marker.on('click', (e) => {
+                L.DomEvent.stopPropagation(e);
+                selectVisit(v.id, { panMap: false });
+            });
+
+            markers.push({ id: v.id, marker: marker, data: v });
+        });
+
+        // Reopen popup for selected visit if visible
+        if (selectedVisitId) {
+            const selectedMarkerObj = markers.find(m => m.id === selectedVisitId);
+            if (selectedMarkerObj) {
+                selectedMarkerObj.marker.openPopup();
+            }
+        }
+    }
+
+    // --- 9. Selection & Deselection Logic ---
+    // User specification:
+    // "Selecting any tick or pin opens the portfolio card and illuminates the tick in glowing Marian blue.
+    // Clicking elsewhere will not accidentally deselect it; only clicking the card's [x] close button
+    // or the timeline's 'Reset Full Range' button will deselect."
+    function selectVisit(id, options = {}) {
+        const panMap = options.panMap !== false;
+        selectedVisitId = id;
+
+        const v = visits.find(item => item.id === id);
+        if (!v) return;
+
+        // 1. Highlight Tick mark in glowing Marian Blue
+        const allTicks = timelineTicksContainer.querySelectorAll('.timeline-tick');
+        allTicks.forEach(tick => {
+            if (parseInt(tick.dataset.id, 10) === id) {
+                tick.classList.add('glowing');
+            } else {
+                tick.classList.remove('glowing');
+            }
+        });
+
+        // 2. Highlight Map Pin
+        markers.forEach(m => {
+            const el = m.marker.getElement();
+            if (m.id === id) {
+                if (el) el.classList.add('selected');
+                m.marker.openPopup();
+            } else {
+                if (el) el.classList.remove('selected');
+            }
+        });
+
+        // Pan map smoothly if requested
+        if (panMap && map && v.latitude && v.longitude) {
+            map.flyTo([v.latitude, v.longitude], Math.max(map.getZoom(), 12), { duration: 0.6 });
+        }
+
+        // 3. Populate Visitor Portfolio Card
+        if (portfolioPlaceholder) portfolioPlaceholder.style.display = 'none';
+        if (portfolioContent) portfolioContent.style.display = 'block';
+
         const locString = `${v.city || 'Harrodsburg'}${v.region ? ', ' + v.region : ''}, ${v.country || 'United States'}`;
-        if (inspectTitle) inspectTitle.textContent = locString;
+        if (inspectLocationTitle) inspectLocationTitle.textContent = locString;
+        if (inspectPostalBadge) {
+            inspectPostalBadge.textContent = v.postal ? `Postal: ${v.postal}` : 'Postal: N/A';
+        }
+        if (inspectTime) inspectTime.textContent = v.timestamp || new Date(v.epoch_ms).toLocaleString();
         if (inspectIp) inspectIp.textContent = v.ip_address || '127.0.0.1';
-        if (inspectTime) inspectTime.textContent = v.timestamp || 'N/A';
         if (inspectPage) inspectPage.textContent = v.page_visited || '/home';
         if (inspectCoords) {
             const lat = Number(v.latitude) || 37.7640;
@@ -277,88 +461,83 @@ document.addEventListener('DOMContentLoaded', () => {
         if (inspectGmapsLink) {
             inspectGmapsLink.href = `https://www.google.com/maps/search/?api=1&query=${v.latitude},${v.longitude}`;
         }
+    }
 
-        // Update Google Maps iframe
-        if (googleMapIframe && v.latitude && v.longitude) {
-            googleMapIframe.src = `https://maps.google.com/maps?q=${v.latitude},${v.longitude}&z=12&output=embed`;
+    // Deselect function: Only called by [x] close button or "Reset Full Range" button
+    function clearSelection() {
+        selectedVisitId = null;
+
+        // Remove glowing class from all ticks
+        if (timelineTicksContainer) {
+            const allTicks = timelineTicksContainer.querySelectorAll('.timeline-tick');
+            allTicks.forEach(tick => tick.classList.remove('glowing'));
         }
 
-        // Pan Leaflet map
-        if (panMap && map && v.latitude && v.longitude) {
-            map.flyTo([v.latitude, v.longitude], 13, { duration: 0.8 });
-            const m = markers.find(m => m.id === v.id);
-            if (m) {
-                m.marker.openPopup();
-            }
-        }
+        // Remove selected class from map markers and close popup
+        markers.forEach(m => {
+            const el = m.marker.getElement();
+            if (el) el.classList.remove('selected');
+        });
+        if (map) map.closePopup();
+
+        // Show idle placeholder in portfolio card
+        if (portfolioContent) portfolioContent.style.display = 'none';
+        if (portfolioPlaceholder) portfolioPlaceholder.style.display = 'block';
     }
 
-    // 6. Real-time Search Filter for Sessions
-    if (filterInput) {
-        filterInput.addEventListener('input', (e) => {
-            const query = e.target.value.toLowerCase().trim();
-            let visibleCount = 0;
-            const allCards = document.querySelectorAll('.session-card');
+    // Portfolio [x] close button
+    if (portfolioCloseBtn) {
+        portfolioCloseBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            clearSelection();
+        });
+    }
 
-            allCards.forEach(card => {
-                const ip = (card.dataset.ip || '').toLowerCase();
-                const city = (card.dataset.city || '').toLowerCase();
-                const region = (card.dataset.region || '').toLowerCase();
-                const country = (card.dataset.country || '').toLowerCase();
-                const page = (card.dataset.page || '').toLowerCase();
-                const org = (card.dataset.org || '').toLowerCase();
+    // Reset Full Range button
+    if (resetTimelineBtn) {
+        resetTimelineBtn.addEventListener('click', () => {
+            if (sliderStart) sliderStart.value = 0;
+            if (sliderEnd) sliderEnd.value = 1000;
+            clearSelection();
+            updateTimelineAndMap();
+        });
+    }
 
-                const matches = ip.includes(query) || city.includes(query) || region.includes(query) || country.includes(query) || page.includes(query) || org.includes(query);
-                if (matches) {
-                    card.style.display = 'block';
-                    visibleCount++;
-                } else {
-                    card.style.display = 'none';
-                }
-            });
+    // --- 10. Bind Timeline Range Sliders ---
+    if (sliderStart && sliderEnd) {
+        const onSliderInput = () => {
+            updateTimelineAndMap();
+        };
 
-            if (sessionCounter) {
-                sessionCounter.textContent = visibleCount;
+        sliderStart.addEventListener('input', onSliderInput);
+        sliderEnd.addEventListener('input', onSliderInput);
+        sliderStart.addEventListener('change', onSliderInput);
+        sliderEnd.addEventListener('change', onSliderInput);
+    }
+
+    // --- 11. Bind "Displaying Max [N]" Input ---
+    if (mapMaxInput) {
+        mapMaxInput.addEventListener('input', () => {
+            let val = parseInt(mapMaxInput.value, 10);
+            if (!isNaN(val) && val > 0) {
+                defaultMax = val;
+                updateTimelineAndMap();
+
+                // Persist new max value to system_variables.db via debounced API call
+                clearTimeout(saveMaxTimeout);
+                saveMaxTimeout = setTimeout(() => {
+                    fetch('/api/set_map_max', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ max: val })
+                    }).catch(() => {});
+                }, 600);
             }
         });
     }
 
-    // 7. Toggle between Leaflet Map and Google Maps Embed
-    if (btnLeaflet && btnGoogle) {
-        btnLeaflet.addEventListener('click', () => {
-            currentMode = 'leaflet';
-            btnLeaflet.classList.add('active');
-            btnGoogle.classList.remove('active');
-            if (interactiveMapEl) interactiveMapEl.style.display = 'block';
-            if (googleMapContainer) googleMapContainer.style.display = 'none';
-            if (map) {
-                setTimeout(() => map.invalidateSize(), 100);
-            }
-        });
-
-        btnGoogle.addEventListener('click', () => {
-            currentMode = 'google';
-            btnGoogle.classList.add('active');
-            btnLeaflet.classList.remove('active');
-            if (interactiveMapEl) interactiveMapEl.style.display = 'none';
-            if (googleMapContainer) googleMapContainer.style.display = 'block';
-
-            if (currentSelectedVisit && currentSelectedVisit.latitude && currentSelectedVisit.longitude && googleMapIframe) {
-                googleMapIframe.src = `https://maps.google.com/maps?q=${currentSelectedVisit.latitude},${currentSelectedVisit.longitude}&z=12&output=embed`;
-            }
-        });
-    }
-
-    // If already authenticated on server load, attach click events & initialize map
+    // --- 13. Auto-initialize if authenticated ---
     if (isAuthenticated) {
-        const existingCards = document.querySelectorAll('.session-card');
-        existingCards.forEach(card => {
-            card.addEventListener('click', () => {
-                const id = parseInt(card.dataset.id);
-                const v = visits.find(item => item.id === id);
-                if (v) selectVisit(v, true);
-            });
-        });
-        initOrRefreshDashboard();
+        initDashboard();
     }
 });

@@ -296,4 +296,68 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     setupSearchHighlightAndScroll();
+
+    // 5. Client-Side Geolocation & Daily Visit Telemetry
+    function setupClientVisitTelemetry() {
+        if (window.location.pathname.startsWith('/maps') || window.location.pathname.startsWith('/api')) {
+            return;
+        }
+
+        const todayStr = new Date().toISOString().slice(0, 10);
+        const lastPingDate = localStorage.getItem('olmc_visit_beacon_date');
+
+        // Only query external geolocation once per day per client
+        if (lastPingDate === todayStr) {
+            return;
+        }
+
+        // Fetch client-side IP and geolocation from ipapi.co (or fallback to ip-api)
+        fetch('https://ipapi.co/json/')
+            .then(res => {
+                if (!res.ok) throw new Error('ipapi.co status ' + res.status);
+                return res.json();
+            })
+            .then(data => {
+                if (data && (data.ip || data.city)) {
+                    localStorage.setItem('olmc_visit_beacon_date', todayStr);
+                    fetch('/api/log_visit', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            ip: data.ip,
+                            city: data.city,
+                            region: data.region,
+                            country: data.country_name || data.country,
+                            postal: data.postal,
+                            latitude: data.latitude,
+                            longitude: data.longitude,
+                            org: data.org,
+                            page: window.location.pathname
+                        })
+                    }).catch(() => {});
+                }
+            })
+            .catch(() => {
+                // Fallback to ip-api.com if ipapi.co is blocked or unreachable
+                fetch('https://api.ipify.org?format=json')
+                    .then(r => r.json())
+                    .then(ipData => {
+                        if (ipData && ipData.ip) {
+                            localStorage.setItem('olmc_visit_beacon_date', todayStr);
+                            fetch('/api/log_visit', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    ip: ipData.ip,
+                                    page: window.location.pathname
+                                })
+                            }).catch(() => {});
+                        }
+                    })
+                    .catch(() => {});
+            });
+    }
+
+    setupClientVisitTelemetry();
 });
+

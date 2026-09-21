@@ -12,7 +12,7 @@
 {% block body_class %}maps-page-body{% endblock %}
 
 {% block content %}
-<section class="location-section" style="padding-top: 2.5rem;">
+<section class="maps-section-container">
 
     <!-- 1. Password Login View (Displayed when not authenticated) -->
     <div id="maps-login-container" class="location-card maps-auth-card" style="{% if authenticated %}display: none;{% endif %}">
@@ -43,11 +43,10 @@
     <!-- 2. Interactive Map Dashboard View (Displayed when authenticated) -->
     <div id="maps-dashboard-container" class="maps-dashboard-wrapper" style="{% if not authenticated %}display: none;{% endif %}">
         
-        <!-- Admin Dashboard Sub-Header / Stats -->
+        <!-- Admin Dashboard Top Sub-Header & Global Stats -->
         <div class="maps-dashboard-header">
             <div class="maps-dashboard-title-area">
-                <span class="maps-live-badge"><i class="fa fa-circle-dot"></i> Live Active</span>
-                <h3 class="maps-subheading">Visitor Geolocation Dashboard</h3>
+                <h3 class="maps-subheading">Visitor Geolocation Portal</h3>
             </div>
 
             <div class="admin-topbar-stats">
@@ -63,145 +62,157 @@
                     <span class="stat-label">Locations:</span>
                     <span class="stat-value" id="stat-locations">{{ unique_locations }}</span>
                 </div>
-                <a href="{{ url_for('maps_logout') }}" id="btn-logout" class="admin-btn-logout" title="Lock and Logout">
-                    <i class="fa fa-lock"></i> Lock
-                </a>
             </div>
         </div>
 
-        <!-- Main Layout: Sidebar & Map -->
-        <div class="admin-main-layout" style="border-radius: 12px; border: 1px solid var(--border-color); overflow: hidden; min-height: 600px;">
+        <!-- Wireframe Split Layout: Left Column (Timeline + Portfolio) & Right Column (Map + Max Filter) -->
+        <div class="maps-wireframe-grid">
             
-            <!-- Left Sidebar: Visitor Sessions List -->
-            <aside class="admin-sidebar">
-                <div class="sidebar-header">
-                    <div class="sidebar-title-row">
-                        <h2><i class="fa fa-list-check icon-accent"></i> Visitor Sessions</h2>
-                        <span class="session-counter-badge" id="session-counter">{{ visits|length }}</span>
-                    </div>
-                    <!-- Session Search Filter -->
-                    <div class="sidebar-search-box">
-                        <i class="fa fa-search"></i>
-                        <input type="text" id="session-filter-input" placeholder="Filter by IP, City, Page..." aria-label="Filter visitor sessions">
-                    </div>
-                </div>
-
-                <div class="sessions-scroll-list" id="sessions-list">
-                    {% if visits and visits|length > 0 %}
-                        {% for v in visits %}
-                            <div class="session-card {% if loop.first %}active{% endif %}" 
-                                 data-id="{{ v.id }}"
-                                 data-ip="{{ v.ip_address }}"
-                                 data-city="{{ v.city }}"
-                                 data-region="{{ v.region }}"
-                                 data-country="{{ v.country }}"
-                                 data-lat="{{ v.latitude }}"
-                                 data-lng="{{ v.longitude }}"
-                                 data-page="{{ v.page_visited }}"
-                                 data-time="{{ v.timestamp }}"
-                                 data-org="{{ v.org }}"
-                                 data-ua="{{ v.user_agent }}">
-                                <div class="session-card-top">
-                                    <span class="session-ip"><i class="fa fa-network-wired"></i> {{ v.ip_address }}</span>
-                                    <span class="session-time">{{ v.timestamp }}</span>
-                                </div>
-                                <div class="session-location">
-                                    <i class="fa fa-location-dot icon-accent"></i>
-                                    <strong>{{ v.city }}{% if v.region %}, {{ v.region }}{% endif %}</strong>
-                                    <span class="session-country">({{ v.country }})</span>
-                                </div>
-                                <div class="session-card-bottom">
-                                    <span class="session-page-badge"><i class="fa fa-file-code"></i> {{ v.page_visited }}</span>
-                                    <span class="session-coords">{{ v.latitude|round(2) }}, {{ v.longitude|round(2) }}</span>
-                                </div>
-                            </div>
-                        {% endfor %}
-                    {% else %}
-                        <div class="no-sessions-empty" id="no-sessions-empty">
-                            <i class="fa fa-chart-line-down empty-icon"></i>
-                            <p>No visitor sessions logged yet.</p>
-                            <small>Visits to public pages will automatically appear here in real time.</small>
-                        </div>
-                    {% endif %}
-                </div>
-            </aside>
-
-            <!-- Right Main: Interactive Map & Live Session Inspector -->
-            <main class="admin-map-area">
+            <!-- Left Column: Timeline Slider + Portfolio Card -->
+            <div class="maps-left-col">
                 
-                <!-- Map View Container -->
-                <div class="map-view-wrapper">
-                    <div class="map-toolbar">
-                        <div class="map-toolbar-left">
-                            <span class="map-status-text"><i class="fa fa-compass icon-accent"></i> Interactive Visitor Map</span>
+                <!-- Timeline Slider Card (Top-Left) -->
+                <div class="timeline-slider-card">
+                    <div class="timeline-card-header">
+                        <div class="timeline-header-title">
+                            <i class="fa fa-chart-simple icon-secondary"></i>
+                            <h4>Visitor Timeline</h4>
                         </div>
-                        <div class="map-toolbar-right">
-                            <button type="button" class="map-mode-btn active" id="btn-leaflet-view">
-                                <i class="fa fa-layer-group"></i> Interactive Map
-                            </button>
-                            <button type="button" class="map-mode-btn" id="btn-google-view">
-                                <i class="fa fa-map"></i> Google Maps Embed
-                            </button>
-                        </div>
+                        <button type="button" id="timeline-reset-btn" class="timeline-reset-btn" title="Reset timeline to full range">
+                            <i class="fa fa-arrows-rotate"></i> Full Range
+                        </button>
                     </div>
 
-                    <!-- Leaflet Interactive Map -->
-                    <div id="interactive-map" class="map-container-layer"></div>
-
-                    <!-- Google Maps Embed Layer -->
-                    <div id="google-maps-frame-container" class="map-container-layer" style="display: none;">
-                        <iframe id="google-map-iframe" 
-                                src="about:blank"
-                                class="google-map-frame" 
-                                loading="lazy" 
-                                allowfullscreen 
-                                referrerpolicy="no-referrer-when-downgrade">
-                        </iframe>
-                    </div>
-                </div>
-
-                <!-- Selected Visitor Inspector Card -->
-                <div class="inspector-card" id="inspector-card">
-                    <div class="inspector-header">
-                        <div class="inspector-title-group">
-                            <div class="inspector-pulse-indicator"></div>
-                            <h3 class="inspector-heading" id="inspect-location-title">Harrodsburg, Kentucky, United States</h3>
-                        </div>
-                        <a id="inspect-gmaps-link" href="https://maps.google.com" target="_blank" rel="noopener noreferrer" class="gmaps-external-link">
-                            <i class="fa fa-arrow-up-right-from-square"></i> Open in Google Maps
-                        </a>
+                    <div class="timeline-range-meta">
+                        <span id="timeline-range-label" class="timeline-date-label">Loading timeline...</span>
+                        <span id="timeline-visits-count" class="timeline-count-badge">{{ visits|length }} visits</span>
                     </div>
 
-                    <div class="inspector-grid">
-                        <div class="inspector-item">
-                            <span class="inspector-item-label"><i class="fa fa-network-wired"></i> IP Address</span>
-                            <span class="inspector-item-val" id="inspect-ip">127.0.0.1</span>
+                    <!-- Interactive Dual-Range Timeline Slider Container -->
+                    <div class="timeline-slider-component" id="timeline-component">
+                        
+                        <!-- Timeline Track with 5% Edge Padding -->
+                        <div class="timeline-track-wrapper" id="timeline-track-wrapper">
+                            
+                            <!-- Visual Track Bar -->
+                            <div class="timeline-track-bar"></div>
+                            
+                            <!-- Selected Highlighted Range Bar -->
+                            <div class="timeline-highlight-range" id="timeline-highlight-range"></div>
+
+                            <!-- Tick Marks Container (mapped per visit) -->
+                            <div class="timeline-ticks-container" id="timeline-ticks-container"></div>
                         </div>
-                        <div class="inspector-item">
-                            <span class="inspector-item-label"><i class="fa fa-clock"></i> Timestamp</span>
-                            <span class="inspector-item-val" id="inspect-time">Just now</span>
+
+                        <!-- Dual Range Drag Thumbs -->
+                        <div class="timeline-controls-row">
+                            <div class="dual-range-inputs-container">
+                                <input type="range" id="timeline-range-start" min="0" max="1000" value="0" step="1" aria-label="Timeline start filter" class="timeline-range-slider range-start">
+                                <input type="range" id="timeline-range-end" min="0" max="1000" value="1000" step="1" aria-label="Timeline end filter" class="timeline-range-slider range-end">
+                            </div>
                         </div>
-                        <div class="inspector-item">
-                            <span class="inspector-item-label"><i class="fa fa-file-lines"></i> Page Visited</span>
-                            <span class="inspector-item-val" id="inspect-page">/home</span>
-                        </div>
-                        <div class="inspector-item">
-                            <span class="inspector-item-label"><i class="fa fa-crosshairs"></i> Latitude & Longitude</span>
-                            <span class="inspector-item-val" id="inspect-coords">37.7640, -84.8436</span>
-                        </div>
-                        <div class="inspector-item full-width">
-                            <span class="inspector-item-label"><i class="fa fa-building"></i> ISP / Organization</span>
-                            <span class="inspector-item-val" id="inspect-org">Local Visitor Network</span>
-                        </div>
-                        <div class="inspector-item full-width">
-                            <span class="inspector-item-label"><i class="fa fa-laptop-code"></i> User-Agent / Browser</span>
-                            <span class="inspector-item-val" id="inspect-ua">Mozilla/5.0 ...</span>
+
+                        <div class="timeline-hints">
+                            <small><i class="fa fa-info-circle"></i> Drag handles to zoom time window. Click any tick to inspect visit.</small>
                         </div>
                     </div>
                 </div>
 
-            </main>
+                <!-- Visitor Portfolio / Details Card (Bottom-Left, directly under timeline) -->
+                <div class="portfolio-card" id="portfolio-card">
+                    <div class="portfolio-header">
+                        <div class="portfolio-title-group">
+                            <div class="portfolio-status-dot" id="portfolio-status-dot"></div>
+                            <h4 id="portfolio-title">Visit Details</h4>
+                        </div>
+                        <button type="button" id="portfolio-close-btn" class="portfolio-close-btn" title="Deselect and close">
+                            <i class="fa fa-times"></i>
+                        </button>
+                    </div>
+
+                    <!-- Idle / Unselected Placeholder State -->
+                    <div id="portfolio-placeholder" class="portfolio-empty-state">
+                        <div class="empty-icon-circle">
+                            <i class="fa fa-location-crosshairs"></i>
+                        </div>
+                        <p class="empty-prompt-title">No Visit Selected</p>
+                        <p class="empty-prompt-desc">Click on any timeline tick mark or map pin above to inspect full visitor details.</p>
+                    </div>
+
+                    <!-- Selected Visit Information Content -->
+                    <div id="portfolio-content" class="portfolio-details-body" style="display: none;">
+                        <div class="portfolio-location-banner">
+                            <i class="fa fa-map-pin icon-secondary"></i>
+                            <div>
+                                <h5 id="inspect-location-title" class="portfolio-location-name">Harrodsburg, Kentucky, United States</h5>
+                                <span id="inspect-postal-badge" class="portfolio-postal-badge">Postal: 40330</span>
+                            </div>
+                        </div>
+
+                        <div class="portfolio-meta-grid">
+                            <div class="portfolio-meta-item">
+                                <span class="portfolio-meta-label"><i class="fa fa-clock icon-secondary"></i> Timestamp</span>
+                                <span class="portfolio-meta-val" id="inspect-time">Just now</span>
+                            </div>
+                            <div class="portfolio-meta-item">
+                                <span class="portfolio-meta-label"><i class="fa fa-network-wired icon-secondary"></i> IP Address</span>
+                                <span class="portfolio-meta-val" id="inspect-ip">127.0.0.1</span>
+                            </div>
+                            <div class="portfolio-meta-item">
+                                <span class="portfolio-meta-label"><i class="fa fa-file-code icon-secondary"></i> Page Visited</span>
+                                <span class="portfolio-meta-val" id="inspect-page">/home</span>
+                            </div>
+                            <div class="portfolio-meta-item">
+                                <span class="portfolio-meta-label"><i class="fa fa-compass icon-secondary"></i> Coordinates</span>
+                                <span class="portfolio-meta-val" id="inspect-coords">37.7640, -84.8436</span>
+                            </div>
+                            <div class="portfolio-meta-item full-span">
+                                <span class="portfolio-meta-label"><i class="fa fa-building icon-secondary"></i> ISP / Organization</span>
+                                <span class="portfolio-meta-val" id="inspect-org">Local Visitor Network</span>
+                            </div>
+                            <div class="portfolio-meta-item full-span">
+                                <span class="portfolio-meta-label"><i class="fa fa-laptop icon-secondary"></i> Browser / Device</span>
+                                <span class="portfolio-meta-val" id="inspect-ua">Mozilla/5.0 ...</span>
+                            </div>
+                        </div>
+
+                        <div class="portfolio-actions">
+                            <a id="inspect-gmaps-link" href="https://maps.google.com" target="_blank" rel="noopener noreferrer" class="portfolio-gmaps-btn">
+                                <i class="fa fa-arrow-up-right-from-square"></i> Open in Google Maps
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Right Column: Map Header with "Displaying Max [N]" and Big Map -->
+            <div class="maps-right-col">
+                
+                <!-- Map Top Bar: Max Controller -->
+                <div class="map-top-controls-bar">
+                    <div class="map-controls-left">
+                        <span class="map-view-label"><i class="fa fa-earth-americas icon-secondary"></i> Global Visitor Map</span>
+                    </div>
+
+                    <!-- Wireframe Specified "Displaying Max [ 50 ]" Control -->
+                    <div class="map-max-control">
+                        <label for="map-max-input">Displaying max:</label>
+                        <input type="number" id="map-max-input" min="1" max="2000" value="{{ default_max }}" class="map-max-input-box" aria-label="Max visits to display on map">
+                        <span id="map-status-badge" class="map-count-status-badge">Showing {{ visits|length }} of {{ visits|length }}</span>
+                    </div>
+                </div>
+
+                <!-- Big Map View Wrapper -->
+                <div class="map-viewport-wrapper">
+                    <!-- Interactive Leaflet Map -->
+                    <div id="interactive-map" class="map-canvas-layer"></div>
+                </div>
+
+            </div>
+
         </div>
+
     </div>
 
 </section>
@@ -211,9 +222,10 @@
 <!-- Leaflet JS -->
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 
-<!-- Pass server visits data safely -->
+<!-- Server-injected data -->
 <script>
     window.SERVER_IS_AUTHENTICATED = {{ 'true' if authenticated else 'false' }};
+    window.DEFAULT_MAP_MAX = {{ default_max }};
     window.VISITS_DATA = {{ visits_json|safe }};
 </script>
 <script src="{{ url_for('static', filename='js/maps.js') }}"></script>

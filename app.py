@@ -13,6 +13,7 @@ app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'olmc-veronica-secret-key-2026-speray')
 
 DB_PATH = os.path.join(os.path.dirname(__file__), 'visits.db')
+SYS_DB_PATH = os.path.join(os.path.dirname(__file__), 'system_variables.db')
 
 def init_db():
     conn = sqlite3.connect(DB_PATH)
@@ -20,6 +21,7 @@ def init_db():
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS visits (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
+            visit_date TEXT,
             timestamp TEXT,
             ip_address TEXT,
             page_visited TEXT,
@@ -48,26 +50,74 @@ def init_db():
     conn.commit()
     conn.close()
 
+def init_system_variables():
+    conn = sqlite3.connect(SYS_DB_PATH)
+    cursor = conn.cursor()
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS system_variables (
+            key TEXT PRIMARY KEY,
+            value TEXT
+        )
+    ''')
+    cursor.execute("SELECT value FROM system_variables WHERE key = 'admin_password'")
+    if not cursor.fetchone():
+        cursor.execute("INSERT OR REPLACE INTO system_variables (key, value) VALUES (?, ?)", ('admin_password', 'speray'))
+    
+    cursor.execute("SELECT value FROM system_variables WHERE key = 'map_default_max'")
+    if not cursor.fetchone():
+        cursor.execute("INSERT OR REPLACE INTO system_variables (key, value) VALUES (?, ?)", ('map_default_max', '50'))
+    
+    conn.commit()
+    conn.close()
+
 init_db()
+init_system_variables()
+
+def get_system_variable(key, default=None):
+    try:
+        conn = sqlite3.connect(SYS_DB_PATH)
+        cursor = conn.cursor()
+        cursor.execute("SELECT value FROM system_variables WHERE key = ?", (key,))
+        row = cursor.fetchone()
+        conn.close()
+        if row and row[0] is not None:
+            return row[0]
+    except Exception as e:
+        app.logger.error(f"Error reading system variable {key}: {e}")
+    return default
+
+def set_system_variable(key, value):
+    try:
+        conn = sqlite3.connect(SYS_DB_PATH)
+        cursor = conn.cursor()
+        cursor.execute("INSERT OR REPLACE INTO system_variables (key, value) VALUES (?, ?)", (key, str(value)))
+        conn.commit()
+        conn.close()
+        return True
+    except Exception as e:
+        app.logger.error(f"Error setting system variable {key}: {e}")
+        return False
 
 def get_admin_password():
-    try:
-        pw_file = os.path.join(os.path.dirname(__file__), 'password.txt')
-        with open(pw_file, 'r', encoding='utf-8') as f:
-            return f.read().strip()
-    except Exception:
-        return 'speray'
+    return get_system_variable('admin_password', 'speray')
+
+LOCAL_PUBLIC_IP = None
 
 def resolve_ip_geo(ip):
+    global LOCAL_PUBLIC_IP
+    is_local = not ip or ip in ('127.0.0.1', '::1', 'localhost', '0.0.0.0')
+    lookup_key = LOCAL_PUBLIC_IP if (is_local and LOCAL_PUBLIC_IP) else ip
+
     # Check cache first
     try:
         conn = sqlite3.connect(DB_PATH)
         cursor = conn.cursor()
-        cursor.execute("SELECT city, region, country, postal, latitude, longitude, org FROM ip_cache WHERE ip = ?", (ip,))
+        cursor.execute("SELECT city, region, country, postal, latitude, longitude, org FROM ip_cache WHERE ip = ?", (lookup_key,))
         row = cursor.fetchone()
         conn.close()
         if row:
             return {
+                'ip': lookup_key,
                 'city': row[0],
                 'region': row[1],
                 'country': row[2],
@@ -80,33 +130,37 @@ def resolve_ip_geo(ip):
         pass
 
     geo_data = {
-        'city': 'Harrodsburg',
-        'region': 'Kentucky',
+        'ip': lookup_key,
+        'city': 'Fairfield',
+        'region': 'Ohio',
         'country': 'United States',
-        'postal': '40330',
-        'latitude': 37.7640,
-        'longitude': -84.8436,
+        'postal': '45014',
+        'latitude': 39.3202,
+        'longitude': -84.5520,
         'org': 'Local Area Visitor'
     }
 
     try:
-        is_local = not ip or ip in ('127.0.0.1', '::1', 'localhost', '0.0.0.0')
-        url = "https://ipapi.co/json/" if is_local else f"https://ipapi.co/{ip}/json/"
+        url = "http://ip-api.com/json/?fields=status,message,country,countryCode,region,regionName,city,zip,lat,lon,timezone,isp,org,as,query" if is_local else f"http://ip-api.com/json/{ip}?fields=status,message,country,countryCode,region,regionName,city,zip,lat,lon,timezone,isp,org,as,query"
         req = urllib.request.Request(
             url,
-            headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
+            headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'}
         )
         with urllib.request.urlopen(req, timeout=3) as resp:
             data = json.loads(resp.read().decode('utf-8'))
-            if 'latitude' in data and 'longitude' in data and data['latitude'] is not None:
+            if data.get('status') == 'success' and 'lat' in data and 'lon' in data:
+                resolved_ip = data.get('query') or ip
+                if is_local:
+                    LOCAL_PUBLIC_IP = resolved_ip
                 geo_data = {
-                    'city': data.get('city') or 'Harrodsburg',
-                    'region': data.get('region') or 'Kentucky',
-                    'country': data.get('country_name') or data.get('country') or 'United States',
-                    'postal': data.get('postal') or '40330',
-                    'latitude': float(data.get('latitude', 37.7640)),
-                    'longitude': float(data.get('longitude', -84.8436)),
-                    'org': data.get('org') or 'Internet Service'
+                    'ip': resolved_ip,
+                    'city': data.get('city') or 'Fairfield',
+                    'region': data.get('regionName') or data.get('region') or 'Ohio',
+                    'country': data.get('country') or 'United States',
+                    'postal': data.get('zip') or '45014',
+                    'latitude': float(data.get('lat')),
+                    'longitude': float(data.get('lon')),
+                    'org': data.get('org') or data.get('isp') or 'Internet Service'
                 }
                 conn = sqlite3.connect(DB_PATH)
                 cursor = conn.cursor()
@@ -114,10 +168,15 @@ def resolve_ip_geo(ip):
                     "INSERT OR REPLACE INTO ip_cache VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
                     (ip, geo_data['city'], geo_data['region'], geo_data['country'], geo_data['postal'], geo_data['latitude'], geo_data['longitude'], geo_data['org'])
                 )
+                if resolved_ip != ip:
+                    cursor.execute(
+                        "INSERT OR REPLACE INTO ip_cache VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                        (resolved_ip, geo_data['city'], geo_data['region'], geo_data['country'], geo_data['postal'], geo_data['latitude'], geo_data['longitude'], geo_data['org'])
+                    )
                 conn.commit()
                 conn.close()
-    except Exception:
-        pass
+    except Exception as e:
+        app.logger.error(f"Geo lookup error: {e}")
 
     return geo_data
 
@@ -125,13 +184,25 @@ def log_visit_async(ip, page, user_agent):
     def worker():
         try:
             geo = resolve_ip_geo(ip)
+            effective_ip = geo.get('ip') or ip
+            today = datetime.now().strftime('%Y-%m-%d')
             timestamp = datetime.now().strftime('%b %d, %Y %I:%M %p')
+
             conn = sqlite3.connect(DB_PATH)
             cursor = conn.cursor()
-            cursor.execute('''
-                INSERT INTO visits (timestamp, ip_address, page_visited, city, region, country, postal, latitude, longitude, org, user_agent)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ''', (timestamp, ip, page, geo['city'], geo['region'], geo['country'], geo['postal'], geo['latitude'], geo['longitude'], geo['org'], user_agent))
+            cursor.execute("SELECT id FROM visits WHERE ip_address = ? AND visit_date = ?", (effective_ip, today))
+            existing = cursor.fetchone()
+            if existing:
+                # Update latest activity for today's visitor without creating duplicate rows
+                cursor.execute(
+                    "UPDATE visits SET timestamp = ?, page_visited = ?, user_agent = ? WHERE id = ?",
+                    (timestamp, page, user_agent, existing[0])
+                )
+            else:
+                cursor.execute('''
+                    INSERT INTO visits (visit_date, timestamp, ip_address, page_visited, city, region, country, postal, latitude, longitude, org, user_agent)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ''', (today, timestamp, effective_ip, page, geo['city'], geo['region'], geo['country'], geo['postal'], geo['latitude'], geo['longitude'], geo['org'], user_agent))
             conn.commit()
             conn.close()
         except Exception as e:
@@ -278,6 +349,21 @@ def fetch_visits_data():
         rows = cursor.fetchall()
         conn.close()
         visits = [dict(row) for row in rows]
+        
+        # Calculate milliseconds epoch timestamp for reliable timeline ordering
+        for v in visits:
+            epoch_ms = 0
+            ts_str = v.get('timestamp') or ''
+            if ts_str:
+                for fmt in ('%b %d, %Y %I:%M %p', '%b %d, %Y %H:%M', '%Y-%m-%d %H:%M:%S', '%Y-%m-%d %I:%M %p'):
+                    try:
+                        dt = datetime.strptime(ts_str, fmt)
+                        epoch_ms = int(dt.timestamp() * 1000)
+                        break
+                    except Exception:
+                        continue
+            v['epoch_ms'] = epoch_ms
+
         total_visits = len(visits)
         unique_ips = len(set(v['ip_address'] for v in visits))
         unique_locations = len(set(f"{v['city']}, {v['region']}" for v in visits if v['city']))
@@ -309,6 +395,8 @@ def maps():
     else:
         visits, total_visits, unique_ips, unique_locations = [], 0, 0, 0
 
+    default_max = int(get_system_variable('map_default_max', '50'))
+
     return render_template(
         'maps.html',
         authenticated=authenticated,
@@ -317,6 +405,7 @@ def maps():
         total_visits=total_visits,
         unique_ips=unique_ips,
         unique_locations=unique_locations,
+        default_max=default_max,
         visits_json=json.dumps(visits)
     )
 
@@ -329,9 +418,11 @@ def api_admin_login():
     if entered.lower() == admin_password.lower():
         session['admin_authenticated'] = True
         visits, total_visits, unique_ips, unique_locations = fetch_visits_data()
+        default_max = int(get_system_variable('map_default_max', '50'))
         return jsonify({
             'status': 'ok',
             'visits': visits,
+            'default_max': default_max,
             'stats': {
                 'total_visits': total_visits,
                 'unique_ips': unique_ips,
@@ -339,6 +430,17 @@ def api_admin_login():
             }
         })
     return jsonify({'status': 'error', 'message': 'Invalid Speray Admin Password. Please try again.'}), 401
+
+@app.route('/api/set_map_max', methods=['POST'])
+def api_set_map_max():
+    if not session.get('admin_authenticated'):
+        return jsonify({'status': 'error', 'message': 'Unauthorized'}), 401
+    data = request.get_json(silent=True) or {}
+    new_max = data.get('max')
+    if new_max and str(new_max).isdigit() and int(new_max) > 0:
+        set_system_variable('map_default_max', str(new_max))
+        return jsonify({'status': 'ok', 'max': int(new_max)})
+    return jsonify({'status': 'error', 'message': 'Invalid max value'}), 400
 
 @app.route('/maps/logout')
 @app.route('/map/logout')
@@ -352,22 +454,31 @@ def api_log_visit():
         data = request.get_json(silent=True) or {}
         ip = data.get('ip') or request.remote_addr
         page = data.get('page') or '/home'
-        city = data.get('city') or 'Harrodsburg'
-        region = data.get('region') or 'Kentucky'
+        city = data.get('city') or 'Fairfield'
+        region = data.get('region') or 'Ohio'
         country = data.get('country') or 'United States'
-        postal = data.get('postal') or '40330'
-        latitude = float(data.get('latitude', 37.7640))
-        longitude = float(data.get('longitude', -84.8436))
+        postal = data.get('postal') or '45014'
+        latitude = float(data.get('latitude', 39.3202))
+        longitude = float(data.get('longitude', -84.5520))
         org = data.get('org') or 'Local Visitor'
         user_agent = request.headers.get('User-Agent', '')[:250]
+        today = datetime.now().strftime('%Y-%m-%d')
         timestamp = datetime.now().strftime('%b %d, %Y %I:%M %p')
 
         conn = sqlite3.connect(DB_PATH)
         cursor = conn.cursor()
-        cursor.execute('''
-            INSERT INTO visits (timestamp, ip_address, page_visited, city, region, country, postal, latitude, longitude, org, user_agent)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        ''', (timestamp, ip, page, city, region, country, postal, latitude, longitude, org, user_agent))
+        cursor.execute("SELECT id FROM visits WHERE ip_address = ? AND visit_date = ?", (ip, today))
+        existing = cursor.fetchone()
+        if existing:
+            cursor.execute(
+                "UPDATE visits SET timestamp = ?, page_visited = ?, user_agent = ? WHERE id = ?",
+                (timestamp, page, user_agent, existing[0])
+            )
+        else:
+            cursor.execute('''
+                INSERT INTO visits (visit_date, timestamp, ip_address, page_visited, city, region, country, postal, latitude, longitude, org, user_agent)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ''', (today, timestamp, ip, page, city, region, country, postal, latitude, longitude, org, user_agent))
         conn.commit()
         conn.close()
         return jsonify({'status': 'ok'})
