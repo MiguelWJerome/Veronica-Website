@@ -297,7 +297,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     setupSearchHighlightAndScroll();
 
-    // 5. Client-Side Geolocation & Daily Visit Telemetry
+    // 5. Client-Side Geolocation & Daily Visit Telemetry (Abstract API with VPN Detection)
     function setupClientVisitTelemetry() {
         if (window.location.pathname.startsWith('/maps') || window.location.pathname.startsWith('/api')) {
             return;
@@ -311,50 +311,59 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        // Fetch client-side IP and geolocation from ipapi.co (or fallback to ip-api)
-        fetch('https://ipapi.co/json/')
-            .then(res => {
-                if (!res.ok) throw new Error('ipapi.co status ' + res.status);
-                return res.json();
-            })
-            .then(data => {
-                if (data && (data.ip || data.city)) {
-                    localStorage.setItem('olmc_visit_beacon_date', todayStr);
-                    fetch('/api/log_visit', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            ip: data.ip,
-                            city: data.city,
-                            region: data.region,
-                            country: data.country_name || data.country,
-                            postal: data.postal,
-                            latitude: data.latitude,
-                            longitude: data.longitude,
-                            org: data.org,
-                            page: window.location.pathname
+        // 1. Fetch Abstract API Key and configuration from server
+        fetch('/api/get_abstract_config')
+            .then(res => res.json())
+            .then(config => {
+                const apiKey = config && config.abstract_api_key;
+                if (apiKey && apiKey.length >= 16) {
+                    // Query Abstract API with VPN & Proxy detection (20,000 requests/month free tier)
+                    return fetch(`https://ipgeolocation.abstractapi.com/v1/?api_key=${encodeURIComponent(apiKey)}`)
+                        .then(res => {
+                            if (!res.ok) throw new Error('Abstract API returned ' + res.status);
+                            return res.json();
                         })
-                    }).catch(() => {});
+                        .then(data => {
+                            if (data && (data.ip_address || data.city)) {
+                                const sec = data.security || {};
+                                const isVpn = Boolean(sec.is_vpn || sec.is_proxy || sec.is_tor || sec.is_relay);
+                                if (isVpn) {
+                                    console.log('Connection detected as VPN/Proxy. Logging flagged security telemetry.');
+                                }
+                                const conn = data.connection || {};
+                                const orgName = conn.autonomous_system_organization || conn.isp_name || 'Visitor Network';
+                                localStorage.setItem('olmc_visit_beacon_date', todayStr);
+                                return fetch('/api/log_visit', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({
+                                        ip: data.ip_address,
+                                        city: data.city,
+                                        region: data.region,
+                                        country: data.country,
+                                        postal: data.postal_code,
+                                        latitude: data.latitude,
+                                        longitude: data.longitude,
+                                        org: orgName,
+                                        is_vpn: isVpn ? 1 : 0,
+                                        page: window.location.pathname
+                                    })
+                                });
+                            }
+                        });
                 }
+                throw new Error('Fallback to server IP intelligence');
             })
             .catch(() => {
-                // Fallback to ip-api.com if ipapi.co is blocked or unreachable
-                fetch('https://api.ipify.org?format=json')
-                    .then(r => r.json())
-                    .then(ipData => {
-                        if (ipData && ipData.ip) {
-                            localStorage.setItem('olmc_visit_beacon_date', todayStr);
-                            fetch('/api/log_visit', {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({
-                                    ip: ipData.ip,
-                                    page: window.location.pathname
-                                })
-                            }).catch(() => {});
-                        }
+                // Fallback: Notify server directly to resolve IP intelligence with built-in proxy & datacenter detection
+                localStorage.setItem('olmc_visit_beacon_date', todayStr);
+                fetch('/api/log_visit', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        page: window.location.pathname
                     })
-                    .catch(() => {});
+                }).catch(() => {});
             });
     }
 

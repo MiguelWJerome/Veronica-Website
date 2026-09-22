@@ -46,6 +46,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const statTotalVisits = document.getElementById('stat-total-visits');
     const statUniqueIps = document.getElementById('stat-unique-ips');
     const statLocations = document.getElementById('stat-locations');
+    const vpnFilterPill = document.getElementById('vpn-filter-pill');
+    const vpnShieldIcon = document.getElementById('vpn-shield-icon');
+    const statVpnCount = document.getElementById('stat-vpn-count');
+    const toggleHideVpns = document.getElementById('toggle-hide-vpns');
+    const abstractSettingsBtn = document.getElementById('abstract-settings-btn');
+    const abstractKeyModal = document.getElementById('abstract-key-modal');
+    const closeAbstractModal = document.getElementById('close-abstract-modal');
+    const abstractApiKeyInput = document.getElementById('abstract-api-key-input');
+    const saveAbstractKeyBtn = document.getElementById('save-abstract-key-btn');
+    const abstractKeyFeedback = document.getElementById('abstract-key-feedback');
+    let vpnFilterActive = Boolean(window.VPN_FILTER_ACTIVE);
 
     // Timeline Elements
     const timelineRangeLabel = document.getElementById('timeline-range-label');
@@ -160,6 +171,16 @@ document.addEventListener('DOMContentLoaded', () => {
                         if (statTotalVisits) statTotalVisits.textContent = data.stats.total_visits;
                         if (statUniqueIps) statUniqueIps.textContent = data.stats.unique_ips;
                         if (statLocations) statLocations.textContent = data.stats.unique_locations;
+                    }
+                    if (statVpnCount && data.vpn_count !== undefined) {
+                        statVpnCount.textContent = data.vpn_count;
+                    }
+                    if (data.vpn_filter_active !== undefined) {
+                        vpnFilterActive = Boolean(data.vpn_filter_active);
+                        if (toggleHideVpns) toggleHideVpns.checked = vpnFilterActive;
+                        if (vpnShieldIcon) {
+                            vpnShieldIcon.className = 'fa fa-shield-halved ' + (vpnFilterActive ? 'shield-active' : 'shield-inactive');
+                        }
                     }
 
                     if (mapMaxInput) {
@@ -521,6 +542,10 @@ document.addEventListener('DOMContentLoaded', () => {
         if (inspectPostalBadge) {
             inspectPostalBadge.textContent = v.postal ? `Postal: ${v.postal}` : 'Postal: N/A';
         }
+        const inspectVpnBadge = document.getElementById('inspect-vpn-badge');
+        if (inspectVpnBadge) {
+            inspectVpnBadge.style.display = (v.is_vpn === 1) ? 'inline-flex' : 'none';
+        }
         if (inspectTime) inspectTime.textContent = v.timestamp || new Date(v.epoch_ms).toLocaleString();
         if (inspectIp) inspectIp.textContent = v.ip_address || '127.0.0.1';
         if (inspectPage) inspectPage.textContent = v.page_visited || '/home';
@@ -659,7 +684,122 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- 13. Auto-initialize if authenticated ---
+    // --- 13. VPN Filter Toggle Logic ---
+    function toggleVpnFilter(desiredState) {
+        fetch('/api/toggle_vpn_filter', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ active: desiredState })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.status === 'ok') {
+                vpnFilterActive = Boolean(data.vpn_filter_active);
+                visits = data.visits || [];
+                visits.forEach((v) => {
+                    if (!v.epoch_ms) {
+                        const parsed = v.timestamp ? Date.parse(v.timestamp.replace(' ', 'T')) : NaN;
+                        v.epoch_ms = !isNaN(parsed) ? parsed : Date.now();
+                    }
+                });
+
+                if (toggleHideVpns) toggleHideVpns.checked = vpnFilterActive;
+                if (vpnShieldIcon) {
+                    vpnShieldIcon.className = 'fa fa-shield-halved ' + (vpnFilterActive ? 'shield-active' : 'shield-inactive');
+                }
+                if (statVpnCount && data.stats) statVpnCount.textContent = data.stats.vpn_count;
+                if (statTotalVisits && data.stats) statTotalVisits.textContent = data.stats.total_visits;
+                if (statUniqueIps && data.stats) statUniqueIps.textContent = data.stats.unique_ips;
+                if (statLocations && data.stats) statLocations.textContent = data.stats.unique_locations;
+
+                clearSelection();
+                computeGlobalDateBounds();
+                refillTimeline(true);
+            }
+        })
+        .catch(() => {});
+    }
+
+    if (toggleHideVpns) {
+        toggleHideVpns.addEventListener('change', () => {
+            toggleVpnFilter(toggleHideVpns.checked);
+        });
+    }
+
+    if (vpnFilterPill) {
+        vpnFilterPill.addEventListener('click', () => {
+            toggleVpnFilter(!vpnFilterActive);
+        });
+    }
+
+    // --- 14. Abstract API Key Modal Logic ---
+    if (abstractSettingsBtn && abstractKeyModal) {
+        abstractSettingsBtn.addEventListener('click', () => {
+            abstractKeyModal.style.display = 'flex';
+            if (abstractKeyFeedback) abstractKeyFeedback.style.display = 'none';
+        });
+    }
+
+    if (closeAbstractModal && abstractKeyModal) {
+        closeAbstractModal.addEventListener('click', () => {
+            abstractKeyModal.style.display = 'none';
+        });
+    }
+
+    if (abstractKeyModal) {
+        abstractKeyModal.addEventListener('click', (e) => {
+            if (e.target === abstractKeyModal) {
+                abstractKeyModal.style.display = 'none';
+            }
+        });
+    }
+
+    if (saveAbstractKeyBtn && abstractApiKeyInput) {
+        saveAbstractKeyBtn.addEventListener('click', () => {
+            const keyVal = abstractApiKeyInput.value.trim();
+            if (!keyVal) return;
+            saveAbstractKeyBtn.disabled = true;
+            saveAbstractKeyBtn.textContent = 'Saving...';
+
+            fetch('/api/set_abstract_key', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ api_key: keyVal })
+            })
+            .then(res => res.json())
+            .then(data => {
+                saveAbstractKeyBtn.disabled = false;
+                saveAbstractKeyBtn.textContent = 'Save Key';
+                if (data.status === 'ok') {
+                    if (abstractKeyFeedback) {
+                        abstractKeyFeedback.textContent = 'Abstract API Key saved successfully!';
+                        abstractKeyFeedback.className = 'modal-feedback-msg success';
+                        abstractKeyFeedback.style.display = 'block';
+                    }
+                    setTimeout(() => {
+                        if (abstractKeyModal) abstractKeyModal.style.display = 'none';
+                    }, 1200);
+                } else {
+                    if (abstractKeyFeedback) {
+                        abstractKeyFeedback.textContent = data.message || 'Error saving key.';
+                        abstractKeyFeedback.className = 'modal-feedback-msg error';
+                        abstractKeyFeedback.style.display = 'block';
+                    }
+                }
+            })
+            .catch(() => {
+                saveAbstractKeyBtn.disabled = false;
+                saveAbstractKeyBtn.textContent = 'Save Key';
+                if (abstractKeyFeedback) {
+                    abstractKeyFeedback.textContent = 'Network error saving key.';
+                    abstractKeyFeedback.className = 'modal-feedback-msg error';
+                    abstractKeyFeedback.style.display = 'block';
+                }
+            });
+        });
+    }
+
+    // --- 15. Auto-initialize if authenticated ---
     if (isAuthenticated) {
         initDashboard();
     }

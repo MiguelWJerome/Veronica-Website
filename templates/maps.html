@@ -62,6 +62,14 @@
                     <span class="stat-label">Locations:</span>
                     <span class="stat-value" id="stat-locations">{{ unique_locations }}</span>
                 </div>
+                <div class="stat-pill vpn-filter-pill" id="vpn-filter-pill" title="Click to toggle VPN / proxy filter">
+                    <i class="fa fa-shield-halved {% if vpn_filter_active %}shield-active{% else %}shield-inactive{% endif %}" id="vpn-shield-icon"></i>
+                    <span class="stat-label">VPNs Filtered:</span>
+                    <span class="stat-value" id="stat-vpn-count">{{ vpn_count }}</span>
+                </div>
+                <button type="button" id="abstract-settings-btn" class="abstract-settings-btn" title="Configure Abstract API key and VPN detection">
+                    <i class="fa fa-key"></i> Abstract Key
+                </button>
             </div>
         </div>
 
@@ -147,7 +155,10 @@
                             <i class="fa fa-map-pin icon-secondary"></i>
                             <div>
                                 <h5 id="inspect-location-title" class="portfolio-location-name">Harrodsburg, Kentucky, United States</h5>
-                                <span id="inspect-postal-badge" class="portfolio-postal-badge">Postal: 40330</span>
+                                <div class="portfolio-badges-row">
+                                    <span id="inspect-postal-badge" class="portfolio-postal-badge">Postal: 40330</span>
+                                    <span id="inspect-vpn-badge" class="portfolio-vpn-badge" style="display: none;"><i class="fa fa-shield-halved"></i> VPN / Proxy Detected</span>
+                                </div>
                             </div>
                         </div>
 
@@ -191,17 +202,26 @@
             <!-- Right Column: Map Header with "Displaying Max [N]" and Big Map -->
             <div class="maps-right-col">
                 
-                <!-- Map Top Bar: Max Controller -->
+                <!-- Map Top Bar: Max Controller & VPN Filter Toggle -->
                 <div class="map-top-controls-bar">
                     <div class="map-controls-left">
                         <span class="map-view-label"><i class="fa fa-earth-americas icon-secondary"></i> Global Visitor Map</span>
                     </div>
 
-                    <!-- Wireframe Specified "Displaying Max [ 50 ]" Control -->
-                    <div class="map-max-control">
-                        <label for="map-max-input">Displaying max:</label>
-                        <input type="number" id="map-max-input" min="1" max="2000" value="{{ default_max }}" class="map-max-input-box" aria-label="Max visits to display on map">
-                        <span id="map-status-badge" class="map-count-status-badge">Showing {{ visits|length }} of {{ visits|length }}</span>
+                    <div class="map-controls-right-group">
+                        <div class="map-vpn-toggle-box">
+                            <label class="vpn-checkbox-label" for="toggle-hide-vpns" title="Toggle hiding VPN and proxy connections">
+                                <input type="checkbox" id="toggle-hide-vpns" {% if vpn_filter_active %}checked{% endif %}>
+                                <span><i class="fa fa-shield-halved"></i> Hide VPNs</span>
+                            </label>
+                        </div>
+
+                        <!-- Wireframe Specified "Displaying Max [ 50 ]" Control -->
+                        <div class="map-max-control">
+                            <label for="map-max-input">Displaying max:</label>
+                            <input type="number" id="map-max-input" min="1" max="2000" value="{{ default_max }}" class="map-max-input-box" aria-label="Max visits to display on map">
+                            <span id="map-status-badge" class="map-count-status-badge">Showing {{ visits|length }} of {{ visits|length }}</span>
+                        </div>
                     </div>
                 </div>
 
@@ -217,6 +237,31 @@
 
     </div>
 
+    <!-- Abstract API Key & Security Modal -->
+    <div id="abstract-key-modal" class="church-modal-overlay" style="display: none;">
+        <div class="church-modal-content abstract-key-modal-content">
+            <button type="button" class="church-modal-close" id="close-abstract-modal" aria-label="Close modal">&times;</button>
+            <div class="modal-header-icon">
+                <i class="fa fa-shield-halved"></i>
+            </div>
+            <h3 class="church-modal-title">IP Intelligence &amp; Abstract API</h3>
+            <p class="church-modal-desc">Abstract API IP Geolocation provides 20,000 free queries/month with real-time VPN and proxy detection. Stored securely in <code>system_variables.db</code>.</p>
+            
+            <div class="abstract-modal-form">
+                <label for="abstract-api-key-input">Abstract API Key:</label>
+                <div class="input-with-action">
+                    <input type="text" id="abstract-api-key-input" class="church-form-input" value="{{ abstract_api_key }}" placeholder="Enter 32-character API key">
+                    <button type="button" id="save-abstract-key-btn" class="church-btn btn-gold">Save Key</button>
+                </div>
+                <div id="abstract-key-feedback" class="modal-feedback-msg" style="display: none;"></div>
+            </div>
+
+            <div class="modal-features-note">
+                <small><i class="fa fa-info-circle"></i> Dual-layer security active: Abstract API <code>security.is_vpn</code> &amp; fallback IP intelligence seamlessly screen datacenter and proxy traffic.</small>
+            </div>
+        </div>
+    </div>
+
 </section>
 {% endblock %}
 
@@ -228,6 +273,8 @@
 <script>
     window.SERVER_IS_AUTHENTICATED = {{ 'true' if authenticated else 'false' }};
     window.DEFAULT_MAP_MAX = {{ default_max }};
+    window.VPN_FILTER_ACTIVE = {{ 'true' if vpn_filter_active else 'false' }};
+    window.ABSTRACT_API_KEY = "{{ abstract_api_key }}";
     window.VISITS_DATA = {{ visits_json|safe }};
 </script>
 <script src="{{ url_for('static', filename='js/maps.js') }}"></script>
