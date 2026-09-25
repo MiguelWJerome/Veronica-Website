@@ -292,8 +292,8 @@ def log_visit_async(ip, page, user_agent):
 @app.before_request
 def track_visitor():
     path = request.path
-    # Do not track static files, maps admin portal, or internal APIs
-    if path.startswith('/static') or path.startswith('/maps') or path.startswith('/favicon') or path.startswith('/api'):
+    # Do not track static files, maps admin portal, internal APIs, or health checks
+    if path.startswith('/static') or path.startswith('/maps') or path.startswith('/favicon') or path.startswith('/api') or path.startswith('/health'):
         return
 
     forwarded = request.headers.get('X-Forwarded-For')
@@ -334,8 +334,8 @@ def search():
         # Dynamically discover all registered GET routes in the application
         seen_endpoints = set()
         for rule in app.url_map.iter_rules():
-            # Skip static files, search page, admin maps, internal APIs, and rules requiring dynamic arguments
-            if rule.endpoint in ('static', 'search', 'index', 'maps', 'maps_logout', 'api_log_visit', 'api_admin_login', 'map') or rule.arguments:
+            # Skip static files, search page, admin maps, internal APIs, health checks, and rules requiring dynamic arguments
+            if rule.endpoint in ('static', 'search', 'index', 'maps', 'maps_logout', 'api_log_visit', 'api_admin_login', 'map', 'health_check') or rule.arguments:
                 continue
             if 'GET' not in rule.methods or rule.endpoint in seen_endpoints:
                 continue
@@ -644,6 +644,10 @@ def api_log_visit():
         return jsonify({'status': 'ok', 'is_vpn': bool(is_vpn)})
     except Exception as e:
         return jsonify({'status': 'error', 'message': str(e)}), 500
+
+@app.route('/health')
+def health_check():
+    return "OK", 200
 
 if __name__ == '__main__':
     # Run the application on localhost and port 2048
